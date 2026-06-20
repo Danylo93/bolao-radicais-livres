@@ -1,15 +1,18 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Target, Save, Loader2, Search, Sparkles, LogOut, Trophy } from 'lucide-react';
+import { Target, Save, Loader2, Search, Sparkles, LogOut, Trophy, Radio } from 'lucide-react';
 import { useStore } from '../store';
 import { api } from '../api';
 import { PageHeader, Loading, EmptyState } from '../components/ui';
-import { MatchCard } from '../components/match';
-import { pointsFor, matchStatus } from '../utils';
+import { MatchCard, LiveMatchCard } from '../components/match';
+import { hasBet, matchStatus, pointsFor } from '../utils';
+
+const LIVE_POLL_MS = 8000;
 
 const STATUS_TABS = [
   { key: 'abertos', label: 'Abertos' },
+  { key: 'ao_vivo', label: 'Ao vivo' },
   { key: 'encerrados', label: 'Encerrados' },
   { key: 'todos', label: 'Todos' },
 ];
@@ -30,6 +33,38 @@ export default function Palpites() {
   const [status, setStatus] = useState('abertos');
   const [phase, setPhase] = useState('todas');
   const [query, setQuery] = useState('');
+  const [liveTick, setLiveTick] = useState(0);
+  const [syncing, setSyncing] = useState(false);
+  const liveRef = useRef(false);
+
+  const liveWithBet = useMemo(
+    () =>
+      state.matches.filter((m) => matchStatus(m) === 'locked' && hasBet(bets[m.id])),
+    [state.matches, bets]
+  );
+
+  useEffect(() => {
+    liveRef.current = status === 'ao_vivo' || liveWithBet.length > 0;
+  }, [status, liveWithBet.length]);
+
+  useEffect(() => {
+    if (!player || !liveRef.current) return undefined;
+
+    const poll = async () => {
+      setSyncing(true);
+      try {
+        await refresh();
+        setLiveTick((t) => t + 1);
+      } catch {
+        /* silencioso */
+      } finally {
+        setSyncing(false);
+      }
+    };
+
+    const id = setInterval(poll, LIVE_POLL_MS);
+    return () => clearInterval(id);
+  }, [player, refresh, status, liveWithBet.length]);
 
   useEffect(() => {
     if (!player) return;
@@ -65,6 +100,8 @@ export default function Palpites() {
   const filtered = useMemo(() => {
     let list = [...state.matches];
     if (status === 'abertos') list = list.filter((m) => matchStatus(m) === 'open');
+    else if (status === 'ao_vivo')
+      list = list.filter((m) => matchStatus(m) === 'locked' && hasBet(bets[m.id]));
     else if (status === 'encerrados') list = list.filter((m) => m.finished);
     if (phase !== 'todas') list = list.filter((m) => m.phase === phase);
     if (query.trim()) {
@@ -77,7 +114,7 @@ export default function Palpites() {
       );
     }
     return list.sort((a, b) => new Date(a.date) - new Date(b.date));
-  }, [state.matches, status, phase, query]);
+  }, [state.matches, status, phase, query, bets, liveTick]);
 
   const dirty = loaded && initial !== openSig(bets, state.matches);
 
@@ -147,19 +184,37 @@ export default function Palpites() {
 
       {/* Filtros */}
       <div className="card mb-6 space-y-3 p-4">
-        <div className="grid grid-cols-3 gap-1 rounded-2xl bg-white/5 p-1">
+        <div className="grid grid-cols-4 gap-1 rounded-2xl bg-white/5 p-1">
           {STATUS_TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setStatus(t.key)}
-              className={`rounded-xl py-2 text-sm font-semibold transition ${
+              className={`relative rounded-xl py-2 text-xs font-semibold transition sm:text-sm ${
                 status === t.key ? 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-night' : 'text-slate-300 hover:bg-white/5'
               }`}
             >
               {t.label}
+              {t.key === 'ao_vivo' && liveWithBet.length > 0 && (
+                <span
+                  className={`absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[10px] font-bold ${
+                    status === t.key ? 'bg-night text-amber-300' : 'bg-rose-500 text-white'
+                  }`}
+                >
+                  {liveWithBet.length}
+                </span>
+              )}
             </button>
           ))}
         </div>
+        {status === 'ao_vivo' && (
+          <div className="flex items-center justify-center gap-2 text-xs text-amber-300/90">
+            <Radio size={13} className={syncing ? 'animate-pulse' : ''} />
+            <span>
+              Atualização automática a cada {LIVE_POLL_MS / 1000}s
+              {syncing ? ' · sincronizando…' : ''}
+            </span>
+          </div>
+        )}
         <div className="flex flex-col gap-3 sm:flex-row">
           <select className="input sm:max-w-[14rem]" value={phase} onChange={(e) => setPhase(e.target.value)}>
             <option value="todas">Todas as fases</option>
@@ -184,21 +239,29 @@ export default function Palpites() {
       {!loaded ? (
         <Loading label="Carregando seus palpites…" />
       ) : filtered.length === 0 ? (
-        <EmptyState icon={Search} title="Nenhum jogo por aqui">
-          <p>Tente mudar os filtros acima.</p>
+        <EmptyState icon={status === 'ao_vivo' ? Radio : Search} title={status === 'ao_vivo' ? 'Nenhum jogo ao vivo agora' : 'Nenhum jogo por aqui'}>
+          <p>
+            {status === 'ao_vivo'
+              ? 'Quando um jogo começar e você tiver palpite, ele aparece aqui com placar em tempo real.'
+              : 'Tente mudar os filtros acima.'}
+          </p>
         </EmptyState>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
-          {filtered.map((m, i) => (
-            <MatchCard
-              key={m.id}
-              match={m}
-              rules={rules}
-              index={i}
-              bet={bets[m.id]}
-              onChange={(val) => setBets((b) => ({ ...b, [m.id]: val }))}
-            />
-          ))}
+          {filtered.map((m, i) =>
+            status === 'ao_vivo' ? (
+              <LiveMatchCard key={m.id} match={m} rules={rules} index={i} bet={bets[m.id]} />
+            ) : (
+              <MatchCard
+                key={m.id}
+                match={m}
+                rules={rules}
+                index={i}
+                bet={bets[m.id]}
+                onChange={(val) => setBets((b) => ({ ...b, [m.id]: val }))}
+              />
+            )
+          )}
         </div>
       )}
 

@@ -50,3 +50,17 @@ export function matchStatus(m) {
   if (!m.home || !m.away) return 'tbd';
   return 'locked'; // já começou, sem resultado
 }
+
+export function hasBet(bet) {
+  return bet && bet.home !== '' && bet.home != null && bet.away !== '' && bet.away != null;
+}
+
+export function hasLiveScore(m) {
+  return m.homeScore != null && m.awayScore != null;
+}
+
+export function liveMinutes(m) {
+  const elapsed = Date.now() - new Date(m.date).getTime();
+  if (elapsed < 0) return 0;
+  return Math.floor(elapsed / 60000);
+}

@@ -1,6 +1,6 @@
-import { motion } from 'framer-motion';
-import { Lock, Clock, CheckCircle2, HelpCircle } from 'lucide-react';
-import { classify, fmtDate, matchStatus } from '../utils';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Lock, Clock, CheckCircle2, HelpCircle, Radio } from 'lucide-react';
+import { classify, fmtDate, hasLiveScore, liveMinutes, matchStatus } from '../utils';
 
 export function TeamBadge({ team, reverse = false }) {
   const flag = team?.flag || '🏳️';
@@ -142,6 +142,101 @@ function ScoreResult({ n, hit }) {
           : 'border-white/10 bg-white/[0.07] text-slate-100'
       }`}
     >
+      {n}
+    </div>
+  );
+}
+
+export function LiveMatchCard({ match, bet, rules, index = 0 }) {
+  const mins = liveMinutes(match);
+  const live = hasLiveScore(match);
+  const projection = live && bet ? classify(bet, { ...match, finished: true }, rules) : null;
+  const scoreKey = `${match.homeScore}-${match.awayScore}`;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: Math.min(index * 0.03, 0.4) }}
+      className="card relative overflow-hidden border-amber-400/20 p-4"
+    >
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-amber-400/5 via-transparent to-rose-400/5" />
+
+      <div className="relative mb-3 flex items-center justify-between gap-2">
+        <span className="chip text-xs">
+          {match.group ? `Grupo ${match.group}` : match.phase}
+          {match.group && <span className="text-slate-400">· {match.round}</span>}
+        </span>
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-300">
+          <span className="live-dot h-2 w-2 rounded-full bg-rose-400" />
+          <Radio size={12} />
+          AO VIVO
+          {mins > 0 && <span className="font-normal text-slate-400">· {mins}&apos;</span>}
+        </span>
+      </div>
+
+      <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3">
+        <TeamBadge team={match.home} />
+        <div className="flex flex-col items-center gap-1">
+          {live ? (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={scoreKey}
+                initial={{ scale: 0.85, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.85, opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="flex items-center gap-1.5"
+              >
+                <LiveScoreBox n={match.homeScore} />
+                <span className="text-lg font-bold text-amber-300/80">×</span>
+                <LiveScoreBox n={match.awayScore} />
+              </motion.div>
+            </AnimatePresence>
+          ) : (
+            <div className="flex items-center gap-1.5 text-slate-500">
+              <span className="grid h-12 w-12 place-items-center rounded-xl border border-dashed border-white/15 text-lg font-bold sm:h-14 sm:w-14">
+                –
+              </span>
+              <span className="text-lg font-bold">×</span>
+              <span className="grid h-12 w-12 place-items-center rounded-xl border border-dashed border-white/15 text-lg font-bold sm:h-14 sm:w-14">
+                –
+              </span>
+            </div>
+          )}
+          <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
+            {live ? 'Placar parcial' : 'Aguardando placar'}
+          </span>
+        </div>
+        <TeamBadge team={match.away} reverse />
+      </div>
+
+      <div className="relative mt-4 flex flex-col gap-2 border-t border-white/10 pt-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-400">Seu palpite</span>
+          {bet ? (
+            <span className="chip border-emerald-400/30 bg-emerald-400/10 text-sm font-bold text-emerald-200">
+              {bet.home} × {bet.away}
+            </span>
+          ) : (
+            <span className="text-xs text-slate-500">Sem palpite</span>
+          )}
+        </div>
+        {projection && (
+          <span className={`chip border text-xs ${TONE[projection.tone]}`}>
+            Parcial: {projection.label} <b className="ml-1">+{projection.pts}</b>
+          </span>
+        )}
+      </div>
+
+      <div className="relative mt-2 text-xs text-slate-500">{fmtDate(match.date)}</div>
+    </motion.div>
+  );
+}
+
+function LiveScoreBox({ n }) {
+  return (
+    <div className="grid h-12 w-12 place-items-center rounded-xl border border-amber-400/40 bg-amber-400/10 text-xl font-extrabold tabular-nums text-amber-200 sm:h-14 sm:w-14">
       {n}
     </div>
   );
