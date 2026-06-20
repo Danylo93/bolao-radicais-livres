@@ -13,6 +13,8 @@ export const pool = new Pool({
   // RDS exige SSL; aceitamos o certificado padrão da AWS.
   ssl: process.env.PGSSL === 'disable' ? false : { rejectUnauthorized: false },
   max: Number(process.env.PG_POOL_MAX || (process.env.VERCEL ? 1 : 10)),
+  connectionTimeoutMillis: Number(process.env.PG_CONNECTION_TIMEOUT_MS || 5000),
+  idleTimeoutMillis: Number(process.env.PG_IDLE_TIMEOUT_MS || 10000),
 });
 
 export function normalizePhone(tel) {

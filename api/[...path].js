@@ -13,6 +13,7 @@ export default async function handler(req, res) {
     await ensureDb();
     return app(req, res);
   } catch (e) {
+    initPromise = undefined;
     console.error('Falha ao iniciar API:', e);
     return res.status(500).json({ error: 'Erro interno no servidor.' });
   }
