@@ -20,7 +20,7 @@ export default function App() {
       ) : !state ? (
         <div className="card mx-auto max-w-md p-8 text-center">
           <p className="mb-2 text-lg font-semibold">Ops! Não consegui falar com o servidor.</p>
-          <p className="text-slate-400">
+          <p className="text-muted">
             Confira se o servidor está rodando e recarregue a página.
           </p>
         </div>

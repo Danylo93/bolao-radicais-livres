@@ -11,9 +11,9 @@ export function Background() {
         style={{ backgroundImage: 'url(/pitch-bg.png)' }}
       />
 
-      {/* Overlay escuro + vinheta verde — legibilidade sobre o gramado */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#041208]/92 via-[#062010]/78 to-[#041208]/95" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,#020a06_78%)]" />
+      {/* Overlay escuro — legibilidade sobre o gramado */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#030d08]/96 via-[#04140c]/90 to-[#030d08]/97" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,#020805_85%)]" />
 
       {/* Faixas douradas estilo Copa */}
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-amber-400/70 to-transparent" />
@@ -88,28 +88,30 @@ export function PageHeader({ icon: Icon, title, subtitle }) {
             <Icon size={22} />
           </span>
         )}
-        <h1 className="font-display text-3xl font-extrabold tracking-tight text-white sm:text-4xl">{title}</h1>
+        <h1 className="font-display text-3xl font-extrabold uppercase tracking-wide text-white text-shadow-sm sm:text-4xl">
+          {title}
+        </h1>
       </div>
-      {subtitle && <p className="text-emerald-100/60">{subtitle}</p>}
+      {subtitle && <p className="text-muted">{subtitle}</p>}
     </motion.div>
   );
 }
 
 export function Loading({ label = 'Carregando…' }) {
   return (
-    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-emerald-100/60">
+    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-muted">
       <Loader2 className="animate-spin text-amber-300" size={32} />
-      <p>{label}</p>
+      <p className="font-medium">{label}</p>
     </div>
   );
 }
 
 export function EmptyState({ icon: Icon, title, children }) {
   return (
-    <div className="card flex flex-col items-center gap-2 p-10 text-center text-emerald-100/60">
-      {Icon && <Icon size={36} className="text-amber-300/50" />}
-      <p className="font-display text-lg font-semibold text-white">{title}</p>
-      {children}
+    <div className="card flex flex-col items-center gap-2 p-10 text-center">
+      {Icon && <Icon size={36} className="text-amber-300" />}
+      <p className="font-display text-lg font-bold uppercase tracking-wide text-white">{title}</p>
+      <div className="text-muted">{children}</div>
     </div>
   );
 }

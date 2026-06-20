@@ -4,6 +4,12 @@
 
 :root {
   color-scheme: dark;
+  --surface: #0c1812;
+  --surface-strong: #101f16;
+  --text-primary: #f8fafc;
+  --text-secondary: #d4dde4;
+  --text-muted: #b8c5d0;
+  --text-faint: #94a3b8;
 }
 
 html,
@@ -13,19 +19,31 @@ body,
 }
 
 body {
-  @apply bg-pitch text-slate-100 font-sans antialiased;
+  @apply bg-pitch font-sans text-[var(--text-primary)] antialiased;
+  font-feature-settings: 'kern' 1, 'liga' 1;
+  line-height: 1.55;
   overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  @apply font-display font-bold tracking-tight text-white;
+  line-height: 1.15;
 }
 
 @layer components {
   .glass {
-    @apply border border-white/15 bg-pitch-card/80 backdrop-blur-xl;
+    @apply border border-white/20 backdrop-blur-xl;
+    background-color: rgba(12, 24, 18, 0.95);
   }
   .glass-strong {
-    @apply border border-amber-400/20 bg-pitch-card/90 backdrop-blur-2xl;
+    @apply border border-amber-400/25 backdrop-blur-2xl;
+    background-color: rgba(16, 31, 22, 0.98);
   }
   .card {
-    @apply glass rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.35)];
+    @apply glass rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.45)];
   }
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 font-semibold transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50;
@@ -40,28 +58,60 @@ body {
     @apply btn bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-glow;
   }
   .btn-ghost {
-    @apply btn border border-white/15 bg-white/5 text-slate-100 backdrop-blur-sm hover:bg-white/10;
+    @apply btn border border-white/20 bg-black/45 text-white backdrop-blur-sm hover:bg-black/55;
   }
   .input {
-    @apply w-full rounded-2xl border border-white/15 bg-black/25 px-4 py-3 text-slate-100 placeholder-emerald-100/35 outline-none transition focus:border-amber-400/50 focus:ring-2 focus:ring-amber-400/25;
+    @apply w-full rounded-2xl border border-white/20 bg-black/50 px-4 py-3 text-white placeholder-[var(--text-faint)] outline-none transition focus:border-amber-400/60 focus:ring-2 focus:ring-amber-400/30;
   }
   .label {
-    @apply mb-1.5 block text-sm font-medium text-emerald-100/75;
+    @apply mb-1.5 block text-sm font-semibold text-[var(--text-secondary)];
   }
   .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/30 px-3 py-1 text-sm backdrop-blur-sm;
+    @apply inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/50 px-3 py-1 text-sm text-[var(--text-secondary)] backdrop-blur-sm;
+  }
+
+  /* Hierarquia tipográfica */
+  .text-body {
+    @apply text-base leading-relaxed text-[var(--text-secondary)];
+  }
+  .text-muted {
+    @apply text-sm leading-relaxed text-[var(--text-muted)];
+  }
+  .text-faint {
+    @apply text-xs leading-relaxed text-[var(--text-faint)];
+  }
+  .text-link {
+    @apply font-semibold text-amber-200 underline-offset-2 hover:text-amber-100 hover:underline;
   }
 }
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-400 bg-clip-text text-transparent;
+    color: #fde68a;
+    background-image: linear-gradient(to right, #fde68a, #fbbf24, #f59e0b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.9)) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.75));
   }
   .text-gold {
-    @apply bg-gradient-to-r from-amber-200 to-yellow-400 bg-clip-text text-transparent;
+    color: #fde68a;
+    background-image: linear-gradient(to right, #fde68a, #fbbf24);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.9)) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.7));
   }
   .text-copa {
-    @apply bg-gradient-to-r from-white via-amber-100 to-amber-300 bg-clip-text text-transparent;
+    color: #fff;
+    background-image: linear-gradient(to right, #ffffff, #fef3c7, #fde68a);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.9)) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.8));
+  }
+  .text-shadow-sm {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -102,4 +152,5 @@ input[type='number'] {
 
 ::selection {
   background: rgba(251, 191, 36, 0.35);
+  color: #fff;
 }

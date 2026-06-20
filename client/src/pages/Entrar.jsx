@@ -41,7 +41,7 @@ export default function Entrar() {
 
       {player && (
         <div className="card mb-4 flex items-center justify-between p-4">
-          <span className="text-sm text-slate-300">
+          <span className="text-body">
             Logado como <b className="text-white">{player.nome}</b>
           </span>
           <button
@@ -79,9 +79,9 @@ export default function Entrar() {
           {busy ? <Loader2 className="animate-spin" size={18} /> : <LogIn size={18} />}
           {busy ? 'Entrando…' : 'Acessar meus palpites'}
         </button>
-        <p className="text-center text-sm text-slate-400">
+        <p className="text-center text-muted">
           Ainda não tem cadastro?{' '}
-          <Link to="/cadastro" className="font-semibold text-emerald-300 hover:underline">
+          <Link to="/cadastro" className="text-link">
             Cadastre-se
           </Link>
         </p>

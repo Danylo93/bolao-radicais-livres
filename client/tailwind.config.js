@@ -4,8 +4,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ['Sora', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['"Barlow Condensed"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['Barlow', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       colors: {
         night: '#041208',

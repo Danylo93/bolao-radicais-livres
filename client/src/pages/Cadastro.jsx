@@ -110,9 +110,9 @@ export default function Cadastro() {
           {busy ? 'Cadastrando…' : 'Entrar no bolão'}
         </button>
 
-        <p className="text-center text-sm text-slate-400">
+        <p className="text-center text-muted">
           Já tem cadastro?{' '}
-          <Link to="/entrar" className="font-semibold text-emerald-300 hover:underline">
+          <Link to="/entrar" className="text-link">
             Acesse aqui
           </Link>
         </p>

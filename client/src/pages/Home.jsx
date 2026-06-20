@@ -74,7 +74,7 @@ export default function Home() {
             className="font-display text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-7xl"
           >
             <span className="text-gradient">BOLÃO</span> <span className="text-copa">RL</span>
-            <span className="mt-2 block text-2xl font-bold text-emerald-100/80 sm:text-3xl">
+            <span className="mt-2 block text-2xl font-semibold text-[var(--text-secondary)] text-shadow-sm sm:text-3xl">
               Palpite. Cravar. Brilhar. 🏆
             </span>
           </motion.h1>
@@ -83,7 +83,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.12 }}
-            className="mt-5 max-w-md text-lg text-emerald-100/70"
+            className="mt-5 max-w-md text-body"
           >
             O bolão dos jovens da <b className="text-white">RL São Miguel</b> pra Copa 2026. Dê seus
             palpites em todos os jogos, dispute com a galera e fature o prêmio mais cobiçado do ano. 😏
@@ -123,7 +123,7 @@ export default function Home() {
           <div className="mx-auto w-fit rounded-3xl bg-white p-4 shadow-xl ring-2 ring-amber-400/30">
             <QRCodeSVG value={SHARE_URL} size={184} bgColor="#ffffff" fgColor="#041208" level="M" />
           </div>
-          <p className="mt-4 break-all text-xs text-emerald-100/50">{SHARE_URL}</p>
+          <p className="mt-4 break-all text-faint">{SHARE_URL}</p>
           <div className="mt-4 flex gap-2">
             <button onClick={copy} className="btn-ghost flex-1 py-2.5 text-sm">
               {copied ? <Check size={16} className="text-amber-300" /> : <Copy size={16} />}
@@ -146,9 +146,8 @@ export default function Home() {
           <h2 className="font-display text-3xl font-extrabold sm:text-4xl">
             <span className="text-gold">{tournament.prize}</span>
           </h2>
-          <p className="mt-2 flex items-center justify-center gap-1 text-slate-300">
-            <Heart size={15} className="text-pink-400" /> Quem cravar mais leva o prêmio mais
-            comentado de São Miguel. Tá esperando o quê?
+          <p className="mt-2 flex items-center justify-center gap-1 text-body">
+            <Heart size={15} className="text-pink-400" /> Quem cravar mais leva Uma Inscrição do Amor que pensa. Tá esperando o quê?
           </p>
         </div>
       </Reveal>
@@ -164,7 +163,7 @@ export default function Home() {
       {/* COMO FUNCIONA */}
       <section>
         <Reveal>
-          <h2 className="mb-6 text-center font-display text-3xl font-extrabold">
+          <h2 className="mb-6 text-center font-display text-3xl font-extrabold uppercase tracking-wide text-white text-shadow-sm">
             Como <span className="text-gradient">funciona</span>
           </h2>
         </Reveal>
@@ -191,8 +190,8 @@ export default function Home() {
                 <span className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-emerald-400/30 to-cyan-400/20 text-emerald-300">
                   <s.icon size={24} />
                 </span>
-                <h3 className="font-display text-lg font-bold">{s.title}</h3>
-                <p className="mt-1.5 text-sm text-slate-400">{s.text}</p>
+                <h3 className="font-display text-lg font-bold uppercase tracking-wide text-white">{s.title}</h3>
+                <p className="mt-1.5 text-muted">{s.text}</p>
               </div>
             </Reveal>
           ))}
@@ -205,7 +204,7 @@ export default function Home() {
           <div className="card p-6 sm:p-8">
             <div className="mb-5 flex items-center justify-between gap-3">
               <h2 className="font-display text-2xl font-extrabold">Pontuação</h2>
-              <Link to="/regras" className="text-sm font-semibold text-emerald-300 hover:underline">
+              <Link to="/regras" className="text-link text-sm">
                 Ver regras completas →
               </Link>
             </div>
@@ -222,10 +221,10 @@ export default function Home() {
       {/* CTA FINAL */}
       <Reveal>
         <div className="card flex flex-col items-center gap-4 p-8 text-center sm:p-10">
-          <h2 className="font-display text-3xl font-extrabold sm:text-4xl">
+          <h2 className="font-display text-3xl font-extrabold uppercase tracking-wide text-white text-shadow-sm sm:text-4xl">
             Bora pro jogo? <span className="text-gradient">Cadastre-se agora</span>
           </h2>
-          <p className="max-w-md text-slate-400">
+          <p className="max-w-md text-muted">
             Leva menos de 1 minuto. Chama a galera da sua célula e venham com tudo pra cima do topo do
             ranking!
           </p>
@@ -251,7 +250,7 @@ function StatCard({ icon: Icon, value, label, tone }) {
         <div className="mt-3 font-display text-3xl font-extrabold tabular-nums">
           <Counter value={value} />
         </div>
-        <div className="text-sm text-slate-400">{label}</div>
+        <div className="text-muted">{label}</div>
       </div>
     </Reveal>
   );
@@ -271,15 +270,15 @@ function NextMatchCard({ next }) {
               <span className="truncate">
                 {next.home?.flag} {next.home?.name}
               </span>
-              <span className="text-slate-500">×</span>
+              <span className="text-[var(--text-faint)]">×</span>
               <span className="truncate text-right">
                 {next.away?.name} {next.away?.flag}
               </span>
             </div>
-            <div className="mt-1 text-xs text-slate-400">{fmtDate(next.date)}</div>
+            <div className="mt-1 text-faint">{fmtDate(next.date)}</div>
           </div>
         ) : (
-          <p className="mt-3 text-sm text-slate-400">A definir em breve.</p>
+          <p className="mt-3 text-muted">A definir em breve.</p>
         )}
       </div>
     </Reveal>
@@ -294,15 +293,15 @@ function ScoreRow({ pts, title, desc, tone }) {
     slate: 'from-slate-300 to-slate-400 text-night',
   };
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-white/5 bg-white/[0.03] p-4">
+    <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-black/35 p-4">
       <div
         className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br font-display text-xl font-extrabold ${tones[tone]}`}
       >
         {pts}
       </div>
       <div>
-        <div className="font-semibold">{title}</div>
-        <div className="text-sm text-slate-400">{desc}</div>
+        <div className="font-semibold text-white">{title}</div>
+        <div className="text-muted">{desc}</div>
       </div>
     </div>
   );

@@ -60,7 +60,7 @@ export default function Ranking() {
           ))}
         </Select>
         <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-faint)]" />
           <input
             className="input pl-9"
             placeholder="Buscar nome…"
@@ -71,7 +71,7 @@ export default function Ranking() {
       </div>
 
       <div className="mb-4 flex items-center justify-between">
-        <span className="text-sm text-slate-400">
+        <span className="text-muted">
           {filtered.length} participante{filtered.length === 1 ? '' : 's'}
         </span>
         <button onClick={load} className="btn-ghost px-3 py-2 text-xs">
@@ -103,7 +103,7 @@ export default function Ranking() {
 function Select({ icon: Icon, value, onChange, children }) {
   return (
     <div className="relative">
-      <Icon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+      <Icon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-faint)]" />
       <select className="input pl-9" value={value} onChange={(e) => onChange(e.target.value)}>
         {children}
       </select>
@@ -138,7 +138,7 @@ function Podium({ podium, flagFor, playerId }) {
             <div className="max-w-full truncate text-center text-sm font-bold">
               {r.id === playerId ? 'Você' : r.nome.replace('(DEMO) ', '')}
             </div>
-            <div className="mb-2 text-xs text-slate-400">
+            <div className="mb-2 text-faint">
               {flagFor(r.selecao)} {r.points} pts
             </div>
             <div className={`w-full rounded-t-2xl bg-gradient-to-t ${s.grad} ${s.h} opacity-80`} />
@@ -156,26 +156,26 @@ function Row({ r, flag, me, index }) {
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: Math.min(index * 0.025, 0.3) }}
       className={`flex items-center gap-3 rounded-2xl border p-3 ${
-        me ? 'border-emerald-400/40 bg-emerald-400/10 shadow-glow' : 'border-white/5 bg-white/[0.03]'
+        me ? 'border-amber-400/40 bg-amber-400/10 shadow-gold' : 'border-white/10 bg-black/35'
       }`}
     >
-      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/5 font-display text-sm font-bold tabular-nums text-slate-300">
+      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-black/40 font-display text-sm font-bold tabular-nums text-[var(--text-secondary)]">
         {r.pos}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5 truncate font-semibold">
           <span className="truncate">{me ? 'Você' : r.nome.replace('(DEMO) ', '')}</span>
-          {me && <span className="chip border-emerald-400/30 bg-emerald-400/10 px-2 py-0 text-[10px] text-emerald-200">eu</span>}
+          {me && <span className="chip border-amber-400/35 bg-amber-400/15 px-2 py-0 text-[10px] text-amber-100">eu</span>}
         </div>
-        <div className="truncate text-xs text-slate-400">
+        <div className="truncate text-faint">
           {flag} {r.celula || 'sem célula'}
         </div>
       </div>
       <div className="text-right">
-        <div className="font-display text-lg font-extrabold tabular-nums text-emerald-300">
+        <div className="font-display text-lg font-extrabold tabular-nums text-amber-200">
           {r.points}
         </div>
-        <div className="text-[11px] text-slate-400">{r.exacts} cravadas</div>
+        <div className="text-faint">{r.exacts} cravadas</div>
       </div>
     </motion.div>
   );

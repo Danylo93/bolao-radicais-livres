@@ -12,7 +12,7 @@ export function TeamBadge({ team, reverse = false }) {
       }`}
     >
       <span className="text-3xl leading-none drop-shadow sm:text-4xl">{flag}</span>
-      <span className="min-w-0 truncate text-sm font-semibold leading-tight sm:text-base">
+      <span className="min-w-0 truncate text-sm font-semibold leading-tight text-white sm:text-base">
         {name}
       </span>
     </div>
@@ -30,7 +30,7 @@ function ScoreBox({ value, onChange, disabled }) {
       disabled={disabled}
       onChange={(e) => onChange(e.target.value)}
       placeholder="-"
-      className="h-12 w-12 rounded-xl border border-white/10 bg-white/5 text-center text-xl font-bold tabular-nums outline-none transition focus:border-emerald-400/70 focus:ring-2 focus:ring-emerald-400/30 disabled:opacity-70 sm:h-14 sm:w-14"
+      className="h-12 w-12 rounded-xl border border-white/20 bg-black/45 text-center text-xl font-bold tabular-nums text-white outline-none transition focus:border-amber-400/70 focus:ring-2 focus:ring-amber-400/30 disabled:opacity-70 sm:h-14 sm:w-14"
     />
   );
 }
@@ -48,7 +48,7 @@ function StatusBadge({ status }) {
     open: { icon: Clock, text: 'Aberto p/ palpite', cls: 'text-emerald-300' },
     locked: { icon: Lock, text: 'Em andamento', cls: 'text-amber-300' },
     finished: { icon: CheckCircle2, text: 'Encerrado', cls: 'text-cyan-300' },
-    tbd: { icon: HelpCircle, text: 'A definir', cls: 'text-slate-400' },
+    tbd: { icon: HelpCircle, text: 'A definir', cls: 'text-[var(--text-faint)]' },
   };
   const { icon: Icon, text, cls } = map[status] || map.tbd;
   return (
@@ -74,9 +74,9 @@ export function MatchCard({ match, bet, onChange, rules, index = 0 }) {
       <div className="mb-3 flex items-center justify-between gap-2">
         <span className="chip text-xs">
           {match.group ? `Grupo ${match.group}` : match.phase}
-          {match.group && <span className="text-slate-400">· {match.round}</span>}
+          {match.group && <span className="text-[var(--text-faint)]">· {match.round}</span>}
         </span>
-        <span className="text-xs text-slate-400">{fmtDate(match.date)}</span>
+        <span className="text-faint">{fmtDate(match.date)}</span>
       </div>
 
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3">
@@ -91,7 +91,7 @@ export function MatchCard({ match, bet, onChange, rules, index = 0 }) {
                 disabled={!editable}
                 onChange={(v) => onChange({ home: v, away: bet?.away ?? '' })}
               />
-              <span className="text-lg font-bold text-slate-500">×</span>
+              <span className="text-lg font-bold text-[var(--text-faint)]">×</span>
               <ScoreBox
                 value={bet?.away}
                 disabled={!editable}
@@ -111,11 +111,11 @@ export function MatchCard({ match, bet, onChange, rules, index = 0 }) {
             <b className="ml-1">+{result.pts}</b>
           </span>
         ) : status === 'locked' ? (
-          <span className="text-xs text-slate-400">Palpites encerrados</span>
+          <span className="text-faint">Palpites encerrados</span>
         ) : status === 'open' ? (
-          <span className="text-xs text-emerald-300/80">Bom palpite! 🍀</span>
+          <span className="text-faint text-emerald-200">Bom palpite! 🍀</span>
         ) : (
-          <span className="text-xs text-slate-500">Aguardando classificação</span>
+          <span className="text-faint">Aguardando classificação</span>
         )}
       </div>
     </motion.div>
@@ -127,7 +127,7 @@ function ResultScore({ home, away, bet }) {
   return (
     <div className="flex items-center gap-1.5">
       <ScoreResult n={home} hit={hit} />
-      <span className="text-lg font-bold text-slate-500">×</span>
+      <span className="text-lg font-bold text-[var(--text-faint)]">×</span>
       <ScoreResult n={away} hit={hit} />
     </div>
   );
@@ -139,7 +139,7 @@ function ScoreResult({ n, hit }) {
       className={`grid h-12 w-12 place-items-center rounded-xl border text-xl font-extrabold tabular-nums sm:h-14 sm:w-14 ${
         hit
           ? 'border-amber-400/50 bg-amber-400/15 text-amber-300'
-          : 'border-white/10 bg-white/[0.07] text-slate-100'
+          : 'border-white/15 bg-black/40 text-white'
       }`}
     >
       {n}
@@ -165,13 +165,13 @@ export function LiveMatchCard({ match, bet, rules, index = 0 }) {
       <div className="relative mb-3 flex items-center justify-between gap-2">
         <span className="chip text-xs">
           {match.group ? `Grupo ${match.group}` : match.phase}
-          {match.group && <span className="text-slate-400">· {match.round}</span>}
+          {match.group && <span className="text-[var(--text-faint)]">· {match.round}</span>}
         </span>
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-300">
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-200">
           <span className="live-dot h-2 w-2 rounded-full bg-rose-400" />
           <Radio size={12} />
           AO VIVO
-          {mins > 0 && <span className="font-normal text-slate-400">· {mins}&apos;</span>}
+          {mins > 0 && <span className="font-normal text-[var(--text-muted)]">· {mins}&apos;</span>}
         </span>
       </div>
 
@@ -194,7 +194,7 @@ export function LiveMatchCard({ match, bet, rules, index = 0 }) {
               </motion.div>
             </AnimatePresence>
           ) : (
-            <div className="flex items-center gap-1.5 text-slate-500">
+            <div className="flex items-center gap-1.5 text-[var(--text-faint)]">
               <span className="grid h-12 w-12 place-items-center rounded-xl border border-dashed border-white/15 text-lg font-bold sm:h-14 sm:w-14">
                 –
               </span>
@@ -204,7 +204,7 @@ export function LiveMatchCard({ match, bet, rules, index = 0 }) {
               </span>
             </div>
           )}
-          <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
             {live ? 'Placar parcial' : 'Aguardando placar'}
           </span>
         </div>
@@ -213,13 +213,13 @@ export function LiveMatchCard({ match, bet, rules, index = 0 }) {
 
       <div className="relative mt-4 flex flex-col gap-2 border-t border-white/10 pt-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-400">Seu palpite</span>
+          <span className="text-muted">Seu palpite</span>
           {bet ? (
-            <span className="chip border-emerald-400/30 bg-emerald-400/10 text-sm font-bold text-emerald-200">
+            <span className="chip border-amber-400/35 bg-amber-400/15 text-sm font-bold text-amber-100">
               {bet.home} × {bet.away}
             </span>
           ) : (
-            <span className="text-xs text-slate-500">Sem palpite</span>
+            <span className="text-faint">Sem palpite</span>
           )}
         </div>
         {projection && (
@@ -229,7 +229,7 @@ export function LiveMatchCard({ match, bet, rules, index = 0 }) {
         )}
       </div>
 
-      <div className="relative mt-2 text-xs text-slate-500">{fmtDate(match.date)}</div>
+      <div className="relative mt-2 text-faint">{fmtDate(match.date)}</div>
     </motion.div>
   );
 }

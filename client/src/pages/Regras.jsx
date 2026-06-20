@@ -15,9 +15,9 @@ export default function Regras() {
       <Reveal>
         <div className="mb-6 overflow-hidden rounded-3xl border border-pink-400/20 bg-gradient-to-r from-pink-500/15 to-amber-400/10 p-6 text-center shadow-pink">
           <Trophy className="mx-auto text-amber-300" size={28} />
-          <h2 className="mt-2 font-display text-xl font-bold text-slate-200">Prêmio do grande campeão</h2>
+          <h2 className="mt-2 font-display text-xl font-bold uppercase tracking-wide text-white">Prêmio do grande campeão</h2>
           <p className="mt-1 font-display text-2xl font-extrabold text-gold">{tournament.prize}</p>
-          <p className="mt-1 flex items-center justify-center gap-1 text-sm text-slate-400">
+          <p className="mt-1 flex items-center justify-center gap-1 text-muted">
             <Heart size={13} className="text-pink-400" /> Pode rir, mas é sério. 😎
           </p>
         </div>
@@ -55,7 +55,7 @@ export default function Regras() {
           <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-bold">
             <ShieldCheck size={20} className="text-emerald-300" /> Regras gerais
           </h2>
-          <ul className="space-y-3 text-slate-300">
+          <ul className="space-y-3 text-body">
             <Item icon={Clock} title="Palpite até o apito inicial">
               Cada jogo fecha pra palpite no horário de início. Depois disso, não dá mais pra mexer naquele jogo.
             </Item>
@@ -94,15 +94,15 @@ function Rule({ pts, tone, title, children }) {
     zero: 'from-rose-500/40 to-rose-700/40 text-rose-100',
   };
   return (
-    <div className="flex items-start gap-4 rounded-2xl border border-white/5 bg-white/[0.03] p-4">
+    <div className="flex items-start gap-4 rounded-2xl border border-white/10 bg-black/35 p-4">
       <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br font-display text-xl font-extrabold ${tones[tone]}`}>
         {pts}
       </div>
       <div>
-        <div className="font-semibold">
-          {title} <span className="text-sm font-normal text-slate-400">· {pts} {pts === 1 ? 'ponto' : 'pontos'}</span>
+        <div className="font-semibold text-white">
+          {title} <span className="text-muted font-normal">· {pts} {pts === 1 ? 'ponto' : 'pontos'}</span>
         </div>
-        <p className="mt-0.5 text-sm text-slate-400">{children}</p>
+        <p className="mt-0.5 text-muted">{children}</p>
       </div>
     </div>
   );
@@ -115,8 +115,8 @@ function Item({ icon: Icon, title, children }) {
         <Icon size={16} />
       </span>
       <div>
-        <div className="font-semibold text-slate-100">{title}</div>
-        <p className="text-sm text-slate-400">{children}</p>
+        <div className="font-semibold text-white">{title}</div>
+        <p className="text-muted">{children}</p>
       </div>
     </li>
   );

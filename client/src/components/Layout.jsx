@@ -80,7 +80,7 @@ export default function Layout({ children }) {
                   `rounded-xl px-3 py-2 text-sm font-medium transition ${
                     isActive
                       ? 'bg-amber-400/15 text-amber-200 shadow-[inset_0_0_0_1px_rgba(251,191,36,0.25)]'
-                      : 'text-emerald-100/70 hover:bg-white/5 hover:text-white'
+                      : 'text-[var(--text-muted)] hover:bg-white/8 hover:text-white'
                   }`
                 }
               >
@@ -115,7 +115,7 @@ export default function Layout({ children }) {
               end={n.end}
               className={({ isActive }) =>
                 `flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition ${
-                  isActive ? 'text-amber-300' : 'text-emerald-100/50'
+                  isActive ? 'text-amber-300' : 'text-[var(--text-faint)]'
                 }`
               }
             >
@@ -131,7 +131,7 @@ export default function Layout({ children }) {
             to={player ? '/palpites' : '/cadastro'}
             className={({ isActive }) =>
               `flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition ${
-                isActive ? 'text-amber-300' : 'text-emerald-100/50'
+                isActive ? 'text-amber-300' : 'text-[var(--text-faint)]'
               }`
             }
           >

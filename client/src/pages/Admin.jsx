@@ -132,7 +132,7 @@ export default function Admin() {
           ))}
         </select>
         <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-faint)]" />
           <input
             className="input pl-9"
             placeholder="Buscar jogo, seleção ou ID…"
@@ -190,7 +190,7 @@ function AdminMatchRow({ match, adminKey, teams, onSaved, toast }) {
 
   return (
     <div className="card p-4">
-      <div className="mb-3 flex items-center justify-between text-xs text-slate-400">
+      <div className="mb-3 flex items-center justify-between text-faint">
         <span className="chip">{match.group ? `Grupo ${match.group}` : match.phase} · {match.id}</span>
         <span>{fmtDate(match.date)} · {status}</span>
       </div>
@@ -208,7 +208,7 @@ function AdminMatchRow({ match, adminKey, teams, onSaved, toast }) {
         </span>
         <div className="flex items-center gap-1.5">
           <input type="number" min={0} className="h-11 w-12 rounded-xl border border-white/10 bg-white/5 text-center font-bold" value={hs} onChange={(e) => setHs(e.target.value)} />
-          <span className="text-slate-500">×</span>
+          <span className="text-[var(--text-faint)]">×</span>
           <input type="number" min={0} className="h-11 w-12 rounded-xl border border-white/10 bg-white/5 text-center font-bold" value={as} onChange={(e) => setAs(e.target.value)} />
         </div>
         <span className="truncate text-right text-sm font-semibold">
@@ -223,7 +223,7 @@ function AdminMatchRow({ match, adminKey, teams, onSaved, toast }) {
           value={date}
           onChange={(e) => setDate(e.target.value)}
         />
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-300">
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-[var(--text-secondary)]">
           <input type="checkbox" checked={finished} onChange={(e) => setFinished(e.target.checked)} className="h-4 w-4 accent-emerald-400" />
           Encerrado
         </label>
@@ -238,7 +238,7 @@ function AdminMatchRow({ match, adminKey, teams, onSaved, toast }) {
 function TeamSelect({ label, value, onChange, teams }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs text-slate-400">{label}</span>
+      <span className="mb-1 block text-faint">{label}</span>
       <select className="input py-2 text-sm" value={value} onChange={(e) => onChange(e.target.value)}>
         <option value="">A definir</option>
         {teams.map((t) => (

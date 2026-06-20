@@ -192,7 +192,7 @@ export default function Palpites() {
               className={`relative rounded-xl py-2 text-xs font-semibold transition sm:text-sm ${
                 status === t.key
                   ? 'bg-gradient-to-r from-amber-300 to-yellow-500 text-pitch'
-                  : 'text-emerald-100/70 hover:bg-white/5'
+                  : 'text-[var(--text-muted)] hover:bg-white/8'
               }`}
             >
               {t.label}
@@ -227,7 +227,7 @@ export default function Palpites() {
             ))}
           </select>
           <div className="relative flex-1">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-faint)]" />
             <input
               className="input pl-9"
               placeholder="Buscar seleção ou grupo…"
@@ -277,7 +277,7 @@ export default function Palpites() {
             className="fixed inset-x-0 bottom-20 z-40 flex justify-center px-4 md:bottom-6"
           >
             <div className="glass-strong flex items-center gap-3 rounded-2xl border-emerald-400/30 px-4 py-3 shadow-glow">
-              <span className="text-sm text-slate-200">Você tem alterações não salvas</span>
+              <span className="text-sm font-medium text-white">Você tem alterações não salvas</span>
               <button onClick={save} disabled={busy} className="btn-primary px-4 py-2 text-sm">
                 {busy ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
                 {busy ? 'Salvando…' : 'Salvar palpites'}
@@ -296,7 +296,7 @@ function SummaryCard({ icon: Icon, label, value, tone }) {
     <div className="card p-4 text-center">
       <Icon className={`mx-auto ${tones[tone]}`} size={20} />
       <div className="mt-1 font-display text-2xl font-extrabold tabular-nums">{value}</div>
-      <div className="text-xs text-slate-400">{label}</div>
+      <div className="text-muted">{label}</div>
     </div>
   );
 }
