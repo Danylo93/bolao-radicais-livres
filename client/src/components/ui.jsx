@@ -5,17 +5,40 @@ import { Loader2 } from 'lucide-react';
 export function Background() {
   return (
     <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      <div className="absolute -left-24 -top-24 h-[34rem] w-[34rem] animate-blob rounded-full bg-emerald-500/20 blur-3xl" />
-      <div className="absolute right-[-6rem] top-1/3 h-[30rem] w-[30rem] animate-blob rounded-full bg-fuchsia-500/20 blur-3xl [animation-delay:4s]" />
-      <div className="absolute bottom-[-4rem] left-1/4 h-[28rem] w-[28rem] animate-blob rounded-full bg-cyan-500/20 blur-3xl [animation-delay:8s]" />
+      {/* Gramado */}
       <div
-        className="absolute inset-0 opacity-[0.04]"
-        style={{
-          backgroundImage:
-            'linear-gradient(rgba(255,255,255,.6) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.6) 1px,transparent 1px)',
-          backgroundSize: '44px 44px',
-        }}
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: 'url(/pitch-bg.png)' }}
       />
+
+      {/* Overlay escuro + vinheta verde — legibilidade sobre o gramado */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#041208]/92 via-[#062010]/78 to-[#041208]/95" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,#020a06_78%)]" />
+
+      {/* Faixas douradas estilo Copa */}
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-amber-400/70 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
+
+      {/* Marcações de campo (linhas brancas sutis) */}
+      <svg
+        className="absolute inset-0 h-full w-full opacity-[0.07]"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden
+      >
+        <rect x="2" y="2" width="96" height="96" fill="none" stroke="white" strokeWidth="0.35" />
+        <line x1="50" y1="2" x2="50" y2="98" stroke="white" strokeWidth="0.3" />
+        <circle cx="50" cy="50" r="10" fill="none" stroke="white" strokeWidth="0.3" />
+        <circle cx="50" cy="50" r="0.8" fill="white" />
+        <rect x="2" y="28" width="16" height="44" fill="none" stroke="white" strokeWidth="0.3" />
+        <rect x="82" y="28" width="16" height="44" fill="none" stroke="white" strokeWidth="0.3" />
+        <rect x="2" y="38" width="6" height="24" fill="none" stroke="white" strokeWidth="0.3" />
+        <rect x="92" y="38" width="6" height="24" fill="none" stroke="white" strokeWidth="0.3" />
+      </svg>
+
+      {/* Brilho dourado suave no topo */}
+      <div className="absolute -left-20 -top-32 h-80 w-80 rounded-full bg-amber-400/10 blur-3xl" />
+      <div className="absolute -right-16 top-1/4 h-64 w-64 rounded-full bg-emerald-400/8 blur-3xl" />
     </div>
   );
 }
@@ -61,21 +84,21 @@ export function PageHeader({ icon: Icon, title, subtitle }) {
     >
       <div className="mb-2 flex items-center gap-3">
         {Icon && (
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-emerald-400/30 to-cyan-400/20 text-emerald-300">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl border border-amber-400/30 bg-gradient-to-br from-amber-400/25 to-emerald-400/15 text-amber-200 shadow-gold">
             <Icon size={22} />
           </span>
         )}
-        <h1 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl">{title}</h1>
+        <h1 className="font-display text-3xl font-extrabold tracking-tight text-white sm:text-4xl">{title}</h1>
       </div>
-      {subtitle && <p className="text-slate-400">{subtitle}</p>}
+      {subtitle && <p className="text-emerald-100/60">{subtitle}</p>}
     </motion.div>
   );
 }
 
 export function Loading({ label = 'Carregando…' }) {
   return (
-    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-slate-400">
-      <Loader2 className="animate-spin text-emerald-400" size={32} />
+    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-emerald-100/60">
+      <Loader2 className="animate-spin text-amber-300" size={32} />
       <p>{label}</p>
     </div>
   );
@@ -83,9 +106,9 @@ export function Loading({ label = 'Carregando…' }) {
 
 export function EmptyState({ icon: Icon, title, children }) {
   return (
-    <div className="card flex flex-col items-center gap-2 p-10 text-center text-slate-400">
-      {Icon && <Icon size={36} className="text-slate-500" />}
-      <p className="font-display text-lg font-semibold text-slate-200">{title}</p>
+    <div className="card flex flex-col items-center gap-2 p-10 text-center text-emerald-100/60">
+      {Icon && <Icon size={36} className="text-amber-300/50" />}
+      <p className="font-display text-lg font-semibold text-white">{title}</p>
       {children}
     </div>
   );

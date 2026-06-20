@@ -62,7 +62,7 @@ export default function Home() {
           <motion.span
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="chip mb-5 border-emerald-400/30 bg-emerald-400/10 text-emerald-200"
+            className="chip mb-5 border-amber-400/35 bg-amber-400/10 text-amber-100"
           >
             <Sparkles size={14} /> {tournament.subtitle}
           </motion.span>
@@ -73,9 +73,9 @@ export default function Home() {
             transition={{ delay: 0.05 }}
             className="font-display text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-7xl"
           >
-            <span className="text-gradient">BOLÃO</span> <span className="text-white">RL</span>
-            <span className="mt-2 block text-2xl font-bold text-slate-300 sm:text-3xl">
-              Palpite. Cravar. Brilhar. ⚽
+            <span className="text-gradient">BOLÃO</span> <span className="text-copa">RL</span>
+            <span className="mt-2 block text-2xl font-bold text-emerald-100/80 sm:text-3xl">
+              Palpite. Cravar. Brilhar. 🏆
             </span>
           </motion.h1>
 
@@ -83,7 +83,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.12 }}
-            className="mt-5 max-w-md text-lg text-slate-300"
+            className="mt-5 max-w-md text-lg text-emerald-100/70"
           >
             O bolão dos jovens da <b className="text-white">RL São Miguel</b> pra Copa 2026. Dê seus
             palpites em todos os jogos, dispute com a galera e fature o prêmio mais cobiçado do ano. 😏
@@ -114,19 +114,19 @@ export default function Home() {
           initial={{ opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.15, type: 'spring', stiffness: 120 }}
-          className="card relative mx-auto w-full max-w-sm overflow-hidden p-6 text-center shadow-glow"
+          className="card relative mx-auto w-full max-w-sm overflow-hidden border-amber-400/20 p-6 text-center shadow-gold"
         >
-          <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-emerald-400/20 blur-2xl" />
-          <div className="mb-3 flex items-center justify-center gap-2 text-sm font-semibold text-emerald-300">
+          <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-amber-400/15 blur-2xl" />
+          <div className="mb-3 flex items-center justify-center gap-2 text-sm font-semibold text-amber-200">
             <QrCode size={16} /> Escaneie e participe
           </div>
-          <div className="mx-auto w-fit rounded-3xl bg-white p-4 shadow-xl">
-            <QRCodeSVG value={SHARE_URL} size={184} bgColor="#ffffff" fgColor="#06061a" level="M" />
+          <div className="mx-auto w-fit rounded-3xl bg-white p-4 shadow-xl ring-2 ring-amber-400/30">
+            <QRCodeSVG value={SHARE_URL} size={184} bgColor="#ffffff" fgColor="#041208" level="M" />
           </div>
-          <p className="mt-4 break-all text-xs text-slate-400">{SHARE_URL}</p>
+          <p className="mt-4 break-all text-xs text-emerald-100/50">{SHARE_URL}</p>
           <div className="mt-4 flex gap-2">
             <button onClick={copy} className="btn-ghost flex-1 py-2.5 text-sm">
-              {copied ? <Check size={16} className="text-emerald-300" /> : <Copy size={16} />}
+              {copied ? <Check size={16} className="text-amber-300" /> : <Copy size={16} />}
               {copied ? 'Copiado!' : 'Copiar link'}
             </button>
             <button onClick={share} className="btn-primary flex-1 py-2.5 text-sm">
@@ -138,9 +138,9 @@ export default function Home() {
 
       {/* PRÊMIO */}
       <Reveal>
-        <div className="relative overflow-hidden rounded-3xl border border-pink-400/20 bg-gradient-to-r from-pink-500/15 via-fuchsia-500/10 to-amber-400/10 p-8 text-center shadow-pink">
-          <div className="absolute inset-0 -z-10 animate-pulse bg-[radial-gradient(circle_at_50%_0%,rgba(236,72,153,0.2),transparent_60%)]" />
-          <span className="chip mx-auto mb-3 border-pink-400/30 bg-pink-400/10 text-pink-200">
+        <div className="relative overflow-hidden rounded-3xl border border-amber-400/25 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-emerald-600/10 p-8 text-center shadow-gold">
+          <div className="absolute inset-0 -z-10 animate-pulse bg-[radial-gradient(circle_at_50%_0%,rgba(251,191,36,0.15),transparent_60%)]" />
+          <span className="chip mx-auto mb-3 border-amber-400/35 bg-amber-400/10 text-amber-100">
             <Trophy size={14} /> Prêmio do campeão
           </span>
           <h2 className="font-display text-3xl font-extrabold sm:text-4xl">

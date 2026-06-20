@@ -8,8 +8,10 @@ export default {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       colors: {
-        night: '#06061a',
-        nightish: '#0b0b24',
+        night: '#041208',
+        nightish: '#062010',
+        pitch: '#041208',
+        'pitch-card': '#0a1a10',
       },
       boxShadow: {
         glow: '0 0 40px -8px rgba(16,185,129,0.45)',

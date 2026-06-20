@@ -190,7 +190,9 @@ export default function Palpites() {
               key={t.key}
               onClick={() => setStatus(t.key)}
               className={`relative rounded-xl py-2 text-xs font-semibold transition sm:text-sm ${
-                status === t.key ? 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-night' : 'text-slate-300 hover:bg-white/5'
+                status === t.key
+                  ? 'bg-gradient-to-r from-amber-300 to-yellow-500 text-pitch'
+                  : 'text-emerald-100/70 hover:bg-white/5'
               }`}
             >
               {t.label}
