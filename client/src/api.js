@@ -33,4 +33,6 @@ export const api = {
       headers: { 'x-admin-key': key },
       body: JSON.stringify({ what }),
     }),
+  adminSync: (key) =>
+    req('/admin/sync', { method: 'POST', headers: { 'x-admin-key': key } }),
 };

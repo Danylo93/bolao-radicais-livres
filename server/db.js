@@ -85,6 +85,13 @@ export async function init() {
     );
   `);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS meta (
+      key   TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+  `);
+
   const { rows } = await pool.query('SELECT COUNT(*)::int AS n FROM matches');
   if (rows[0].n === 0) {
     await seedMatches();
@@ -228,4 +235,24 @@ export async function resetParticipants() {
 
 export async function resetResults() {
   await pool.query('UPDATE matches SET finished = FALSE, home_score = NULL, away_score = NULL');
+}
+
+// ----------------------------- Meta / sync ----------------------------------
+export async function getMeta(key) {
+  const { rows } = await pool.query('SELECT value FROM meta WHERE key = $1', [key]);
+  return rows[0]?.value ?? null;
+}
+
+export async function setMeta(key, value) {
+  await pool.query(
+    `INSERT INTO meta (key, value) VALUES ($1, $2)
+     ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+    [key, String(value)]
+  );
+}
+
+export async function shouldSync(maxAgeMs = 5 * 60 * 1000) {
+  const last = await getMeta('last_sync_at');
+  if (!last) return true;
+  return Date.now() - Number(last) > maxAgeMs;
 }

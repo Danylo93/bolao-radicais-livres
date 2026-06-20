@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, KeyRound, Loader2, Save, LogOut, RotateCcw, Search, Trash2, Users } from 'lucide-react';
+import { Shield, KeyRound, Loader2, Save, LogOut, RotateCcw, Search, Trash2, Users, RefreshCw } from 'lucide-react';
 import { useStore } from '../store';
 import { api } from '../api';
 import { PageHeader, Loading } from '../components/ui';
@@ -20,7 +20,7 @@ export default function Admin() {
   const [authed, setAuthed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [phase, setPhase] = useState('todas');
-  const [query, setQuery] = useState('');
+  const [syncing, setSyncing] = useState(false);
 
   const login = async (e) => {
     e.preventDefault();
@@ -49,6 +49,19 @@ export default function Admin() {
       toast('Pronto! ✅');
     } catch (err) {
       toast(err.message, 'error');
+    }
+  };
+
+  const runSync = async () => {
+    setSyncing(true);
+    try {
+      const r = await api.adminSync(key);
+      await refresh();
+      toast(`Placares sincronizados (${r.source}, ${r.updated} atualizado(s)) ✅`);
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -98,12 +111,20 @@ export default function Admin() {
 
   return (
     <div>
-      <PageHeader icon={Shield} title="Painel do organizador" subtitle="Lance resultados e gerencie o bolão." />
+      <PageHeader
+        icon={Shield}
+        title="Painel do organizador"
+        subtitle="Placares sincronizam automaticamente a cada 5 min. Use o admin só para ajustes."
+      />
 
-      <div className="mb-5 flex flex-wrap items-center gap-3">
-        <span className="chip"><Users size={14} className="text-emerald-300" /> {state.stats.participants} participantes</span>
+      <div className="card mb-5 flex flex-wrap items-center gap-3 border-amber-400/20 p-4">
+        <span className="chip"><Users size={14} className="text-amber-300" /> {state.stats.participants} participantes</span>
         <span className="chip">{state.stats.finished}/{state.stats.totalMatches} jogos encerrados</span>
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto flex flex-wrap gap-2">
+          <button onClick={runSync} disabled={syncing} className="btn-ghost px-3 py-2 text-xs">
+            {syncing ? <Loader2 className="animate-spin" size={14} /> : <RefreshCw size={14} />}
+            Sincronizar agora
+          </button>
           <button onClick={() => reset('results')} className="btn-ghost px-3 py-2 text-xs">
             <RotateCcw size={14} /> Zerar resultados
           </button>

@@ -56,9 +56,13 @@ Configure estas variáveis no painel da Vercel:
 ```bash
 DATABASE_URL=postgresql://USUARIO:SENHA@HOST:5432/bolao_rl
 ADMIN_KEY=troque-esta-chave
+API_FOOTBALL_KEY=sua-chave-api-football
+CRON_SECRET=uma-string-secreta-aleatoria
 ```
 
 Opcionalmente defina `PGSSL=disable` apenas se o banco não usar SSL. Em Vercel, o pool usa 1 conexão por instância por padrão.
+
+**Placares automáticos:** o servidor busca resultados da Copa a cada 5 min (cron) e quando alguém abre o app. Com `API_FOOTBALL_KEY` (liga `1`, temporada `2026`) os placares e o ranking atualizam sozinhos — sem precisar lançar manualmente no admin.
 
 ---
 
@@ -79,12 +83,11 @@ Opcionalmente defina `PGSSL=disable` apenas se o banco não usar SSL. Em Vercel,
 ## 🛠️ Painel do organizador
 
 - Acesse **`/admin`** e entre com a chave (padrão: **`rl2026`**).
-- Defina a chave de produção com a variável de ambiente `ADMIN_KEY`.
-- Lá você pode:
-  - Lançar **placares** e marcar jogos como **encerrados** (o ranking atualiza na hora).
+- **Placares são automáticos** — sincronizados da Copa 2026 a cada 5 min e ao abrir o app/ranking.
+- O admin serve para **ajustes manuais** (mata-mata, datas, correções):
   - Definir os **times do mata-mata** conforme as seleções se classificam.
-  - Ajustar **datas/horários** dos jogos.
-  - **Zerar resultados** ou **zerar participantes**.
+  - Ajustar **datas/horários** ou corrigir um placar pontualmente.
+  - **Sincronizar agora** ou **zerar** participantes/resultados.
 
 ### ⚠️ Antes de abrir pra valer
 O app já vem com **dados de demonstração** (participantes "(DEMO)" e alguns resultados)

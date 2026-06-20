@@ -211,7 +211,7 @@ export default function Home() {
             <div className="grid gap-3 sm:grid-cols-2">
               <ScoreRow pts={rules.exact} title="Placar exato" desc="Cravou o resultado certinho" tone="amber" />
               <ScoreRow pts={rules.resultDiff} title="Vencedor + saldo" desc="Acertou quem ganhou e por quantos" tone="emerald" />
-              <ScoreRow pts={rules.result} title="Só o resultado" desc="Acertou quem venceu (ou o empate)" tone="cyan" />
+              <ScoreRow pts={rules.result} title="Só o resultado" desc="Acertou quem venceu, mas errou o saldo" tone="cyan" />
               <ScoreRow pts={rules.oneTeam} title="Gols de um time" desc="Cravou os gols de uma seleção" tone="slate" />
             </div>
           </div>

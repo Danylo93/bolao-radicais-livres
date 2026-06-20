@@ -271,3 +271,14 @@ function buildKnockoutMatches() {
 export function buildSeed() {
   return [...buildGroupMatches(), ...buildKnockoutMatches()];
 }
+
+// Mapeamento pt-BR ↔ inglês (para sincronizar placares externos).
+const PT_TO_EN = Object.fromEntries(Object.entries(T).map(([en, t]) => [t.name, en]));
+
+export function teamByEnglish(en) {
+  return T[en] || null;
+}
+
+export function englishKeyForTeamName(name) {
+  return PT_TO_EN[name] || null;
+}

@@ -4,6 +4,7 @@ import cors from 'cors';
 import * as db from './db.js';
 import { TOURNAMENT, RULES, TEAMS, PHASE_ORDER } from './data.js';
 import { computeRanking } from './scoring.js';
+import { maybeSync, syncMatches } from './sync.js';
 
 const app = express();
 const ADMIN_KEY = process.env.ADMIN_KEY || 'rl2026';
@@ -47,6 +48,7 @@ const wrap = (fn) => (req, res) => fn(req, res).catch((e) => {
 
 // ----------------------------- API: público --------------------------------
 app.get('/api/state', wrap(async (req, res) => {
+  await maybeSync();
   const [matches, users, celulas] = await Promise.all([db.getMatches(), db.getUsers(), db.getCelulas()]);
   res.json({
     tournament: TOURNAMENT,
@@ -121,6 +123,7 @@ app.post('/api/users/:id/bets', wrap(async (req, res) => {
 }));
 
 app.get('/api/ranking', wrap(async (req, res) => {
+  await maybeSync();
   const [users, bets, matches] = await Promise.all([db.getUsers(), db.getAllBets(), db.getMatches()]);
   res.json({ ranking: computeRanking(users, bets, matches) });
 }));
@@ -149,6 +152,23 @@ app.post('/api/admin/reset', requireAdmin, wrap(async (req, res) => {
   if (what === 'participants') await db.resetParticipants();
   else if (what === 'results') await db.resetResults();
   res.json({ ok: true });
+}));
+
+app.post('/api/admin/sync', requireAdmin, wrap(async (req, res) => {
+  const result = await syncMatches();
+  await db.setMeta('last_sync_at', String(Date.now()));
+  res.json({ ok: true, ...result });
+}));
+
+app.get('/api/cron/sync', wrap(async (req, res) => {
+  const secret = process.env.CRON_SECRET;
+  if (secret) {
+    const auth = req.headers.authorization || '';
+    if (auth !== `Bearer ${secret}`) return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const result = await syncMatches();
+  await db.setMeta('last_sync_at', String(Date.now()));
+  res.json({ ok: true, ...result });
 }));
 
 app.use('/api', (req, res) => {
