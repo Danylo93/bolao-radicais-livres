@@ -49,7 +49,7 @@ npm start       # Express serve o app + API em http://localhost:4010
 
 ### 2c) Deploy na Vercel
 
-O projeto já inclui `vercel.json` e uma função serverless em `api/[...path].js`.
+O projeto já inclui `vercel.json` e uma função serverless em `api/index.js`.
 
 Configure estas variáveis no painel da Vercel:
 
@@ -128,7 +128,7 @@ bolao-rl/
 │   ├── scoring.js # motor de pontuação e ranking
 │   └── db.js      # persistência PostgreSQL + seed dos jogos
 ├── api/           # função serverless da Vercel
-│   └── [...path].js
+│   └── index.js
 └── client/        # app React (Vite + Tailwind + Framer Motion)
     └── src/
         ├── pages/      # Home, Cadastro, Entrar, Palpites, Ranking, Regras, Admin

@@ -4,12 +4,16 @@
   "buildCommand": "npm run build",
   "outputDirectory": "client/dist",
   "functions": {
-    "api/[...all].js": {
+    "api/index.js": {
       "regions": ["gru1"],
       "maxDuration": 30
     }
   },
   "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index"
+    },
     {
       "source": "/:path((?!api/).*)",
       "destination": "/index.html"

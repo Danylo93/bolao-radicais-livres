@@ -4,7 +4,7 @@ import * as db from '../server/db.js';
 let initPromise;
 
 function ensureDb() {
-  initPromise ||= db.ping();
+  initPromise ||= db.init();
   return initPromise;
 }
 
