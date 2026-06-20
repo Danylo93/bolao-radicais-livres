@@ -4,7 +4,7 @@ import * as db from '../server/db.js';
 let initPromise;
 
 function ensureDb() {
-  initPromise ||= db.init();
+  initPromise ||= db.ping();
   return initPromise;
 }
 
@@ -15,6 +15,8 @@ export default async function handler(req, res) {
   } catch (e) {
     initPromise = undefined;
     console.error('Falha ao iniciar API:', e);
-    return res.status(500).json({ error: 'Erro interno no servidor.' });
+    return res.status(503).json({
+      error: 'Banco de dados indisponível. Confira DATABASE_URL, SSL e liberação de acesso ao Postgres.',
+    });
   }
 }

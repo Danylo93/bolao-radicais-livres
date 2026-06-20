@@ -37,6 +37,10 @@ function rowToMatch(r) {
 }
 
 // ----------------------------- Inicialização --------------------------------
+export async function ping() {
+  await pool.query('SELECT 1');
+}
+
 export async function init() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS matches (
