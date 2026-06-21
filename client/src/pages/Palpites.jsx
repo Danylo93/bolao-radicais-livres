@@ -26,6 +26,7 @@ export default function Palpites() {
   const { state, player, refresh, toast, logout } = useStore();
   const rules = state.rules;
   const [bets, setBets] = useState({});
+  const [bonus, setBonus] = useState(0);
   const [initial, setInitial] = useState('');
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -37,15 +38,14 @@ export default function Palpites() {
   const [syncing, setSyncing] = useState(false);
   const liveRef = useRef(false);
 
-  const liveWithBet = useMemo(
-    () =>
-      state.matches.filter((m) => matchStatus(m) === 'locked' && hasBet(bets[m.id])),
-    [state.matches, bets]
+  const liveNow = useMemo(
+    () => state.matches.filter((m) => matchStatus(m) === 'locked'),
+    [state.matches, liveTick]
   );
 
   useEffect(() => {
-    liveRef.current = status === 'ao_vivo' || liveWithBet.length > 0;
-  }, [status, liveWithBet.length]);
+    liveRef.current = status === 'ao_vivo' || liveNow.length > 0;
+  }, [status, liveNow.length]);
 
   useEffect(() => {
     if (!player || !liveRef.current) return undefined;
@@ -64,15 +64,16 @@ export default function Palpites() {
 
     const id = setInterval(poll, LIVE_POLL_MS);
     return () => clearInterval(id);
-  }, [player, refresh, status, liveWithBet.length]);
+  }, [player, refresh, status, liveNow.length]);
 
   useEffect(() => {
     if (!player) return;
     setLoaded(false);
     api
       .user(player.id)
-      .then(({ bets }) => {
+      .then(({ bets, bonusPoints }) => {
         setBets(bets || {});
+        setBonus(bonusPoints || 0);
         setInitial(openSig(bets || {}, state.matches));
       })
       .catch(() => toast('Não consegui carregar seus palpites.', 'error'))
@@ -81,16 +82,16 @@ export default function Palpites() {
   }, [player?.id]);
 
   const myPoints = useMemo(() => {
-    let pts = 0;
+    let match = 0;
     let cravadas = 0;
     for (const m of state.matches) {
       if (!m.finished) continue;
       const p = pointsFor(bets[m.id], m, rules);
-      pts += p;
+      match += p;
       if (p === rules.exact) cravadas += 1;
     }
-    return { pts, cravadas };
-  }, [bets, state.matches, rules]);
+    return { pts: match + bonus, match, bonus, cravadas };
+  }, [bets, state.matches, rules, bonus]);
 
   const openMatches = state.matches.filter((m) => matchStatus(m) === 'open');
   const filledOpen = openMatches.filter(
@@ -100,8 +101,7 @@ export default function Palpites() {
   const filtered = useMemo(() => {
     let list = [...state.matches];
     if (status === 'abertos') list = list.filter((m) => matchStatus(m) === 'open');
-    else if (status === 'ao_vivo')
-      list = list.filter((m) => matchStatus(m) === 'locked' && hasBet(bets[m.id]));
+    else if (status === 'ao_vivo') list = list.filter((m) => matchStatus(m) === 'locked');
     else if (status === 'encerrados') list = list.filter((m) => m.finished);
     if (phase !== 'todas') list = list.filter((m) => m.phase === phase);
     if (query.trim()) {
@@ -112,6 +112,14 @@ export default function Palpites() {
           m.away?.name.toLowerCase().includes(q) ||
           (m.group && `grupo ${m.group}`.includes(q))
       );
+    }
+    if (status === 'ao_vivo') {
+      return list.sort((a, b) => {
+        const betA = hasBet(bets[a.id]) ? 0 : 1;
+        const betB = hasBet(bets[b.id]) ? 0 : 1;
+        if (betA !== betB) return betA - betB;
+        return new Date(a.date) - new Date(b.date);
+      });
     }
     return list.sort((a, b) => new Date(a.date) - new Date(b.date));
   }, [state.matches, status, phase, query, bets, liveTick]);
@@ -169,6 +177,11 @@ export default function Palpites() {
         <SummaryCard icon={Sparkles} label="Cravadas" value={myPoints.cravadas} tone="emerald" />
         <SummaryCard icon={Target} label="Palpites feitos" value={`${filledOpen}/${openMatches.length}`} tone="cyan" />
       </div>
+      {myPoints.bonus > 0 && (
+        <p className="-mt-3 mb-6 text-center text-xs text-amber-200/80">
+          Inclui <b>+{myPoints.bonus}</b> de presença · {myPoints.match} de palpites
+        </p>
+      )}
 
       <div className="mb-4 flex items-center justify-end">
         <button
@@ -196,13 +209,13 @@ export default function Palpites() {
               }`}
             >
               {t.label}
-              {t.key === 'ao_vivo' && liveWithBet.length > 0 && (
+              {t.key === 'ao_vivo' && liveNow.length > 0 && (
                 <span
                   className={`absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[10px] font-bold ${
                     status === t.key ? 'bg-night text-amber-300' : 'bg-rose-500 text-white'
                   }`}
                 >
-                  {liveWithBet.length}
+                  {liveNow.length}
                 </span>
               )}
             </button>
@@ -244,7 +257,7 @@ export default function Palpites() {
         <EmptyState icon={status === 'ao_vivo' ? Radio : Search} title={status === 'ao_vivo' ? 'Nenhum jogo ao vivo agora' : 'Nenhum jogo por aqui'}>
           <p>
             {status === 'ao_vivo'
-              ? 'Quando um jogo começar e você tiver palpite, ele aparece aqui com placar em tempo real.'
+              ? 'Nenhum jogo rolando agora. Quando um jogo começar, ele aparece aqui com placar em tempo real.'
               : 'Tente mudar os filtros acima.'}
           </p>
         </EmptyState>

@@ -21,6 +21,22 @@ export const api = {
 
   adminLogin: (key) => req('/admin/login', { method: 'POST', body: JSON.stringify({ key }) }),
   adminUsers: (key) => req('/admin/users', { headers: { 'x-admin-key': key } }),
+  adminUpdateUser: (key, id, patch) =>
+    req(`/admin/users/${id}`, {
+      method: 'POST',
+      headers: { 'x-admin-key': key },
+      body: JSON.stringify(patch),
+    }),
+  adminDeleteUser: (key, id) =>
+    req(`/admin/users/${id}`, { method: 'DELETE', headers: { 'x-admin-key': key } }),
+  adminAddActivity: (key, userId, kind) =>
+    req(`/admin/users/${userId}/activity`, {
+      method: 'POST',
+      headers: { 'x-admin-key': key },
+      body: JSON.stringify({ kind }),
+    }),
+  adminDeleteActivity: (key, activityId) =>
+    req(`/admin/activities/${activityId}`, { method: 'DELETE', headers: { 'x-admin-key': key } }),
   adminMatch: (key, id, patch) =>
     req(`/admin/match/${id}`, {
       method: 'POST',

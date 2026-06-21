@@ -22,6 +22,7 @@ export default function Entrar() {
 
   const submit = async (e) => {
     e.preventDefault();
+    if (tel.replace(/\D/g, '').length < 10) return toast('Informe o telefone com DDD.', 'error');
     setBusy(true);
     try {
       const { user } = await api.login(tel);
@@ -37,7 +38,7 @@ export default function Entrar() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <PageHeader icon={LogIn} title="Já participo" subtitle="Acesse com o telefone do seu cadastro." />
+      <PageHeader icon={LogIn} title="Já participo" subtitle="É só o telefone do cadastro — sem senha." />
 
       {player && (
         <div className="card mb-4 flex items-center justify-between p-4">

@@ -21,7 +21,9 @@ import { Reveal, Counter } from '../components/ui';
 import { TeamBadge } from '../components/match';
 import { fmtDate } from '../utils';
 
-const SHARE_URL = import.meta.env.VITE_PUBLIC_URL || window.location.origin;
+const BASE_URL = (import.meta.env.VITE_PUBLIC_URL || window.location.origin).replace(/\/$/, '');
+// O QR Code e o link de divulgação levam direto para a tela de cadastro.
+const SHARE_URL = `${BASE_URL}/cadastro`;
 
 export default function Home() {
   const { state, player } = useStore();
@@ -73,8 +75,9 @@ export default function Home() {
             transition={{ delay: 0.05 }}
             className="font-display text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-7xl"
           >
-            <span className="text-gradient">BOLÃO</span> <span className="text-copa">RL</span>
-            <span className="mt-2 block text-2xl font-semibold text-[var(--text-secondary)] text-shadow-sm sm:text-3xl">
+            <span className="text-gradient">BOLÃO RL</span>
+            <span className="mt-1 block text-copa text-4xl font-extrabold sm:text-6xl">São Miguel</span>
+            <span className="mt-3 block text-xl font-semibold text-[var(--text-secondary)] text-shadow-sm sm:text-2xl">
               Palpite. Cravar. Brilhar. 🏆
             </span>
           </motion.h1>
@@ -136,19 +139,24 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* PRÊMIO */}
+      {/* PRÊMIOS */}
       <Reveal>
-        <div className="relative overflow-hidden rounded-3xl border border-amber-400/25 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-emerald-600/10 p-8 text-center shadow-gold">
+        <div className="relative overflow-hidden rounded-3xl border border-amber-400/25 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-emerald-600/10 p-6 shadow-gold sm:p-8">
           <div className="absolute inset-0 -z-10 animate-pulse bg-[radial-gradient(circle_at_50%_0%,rgba(251,191,36,0.15),transparent_60%)]" />
-          <span className="chip mx-auto mb-3 border-amber-400/35 bg-amber-400/10 text-amber-100">
-            <Trophy size={14} /> Prêmio do campeão
+          <span className="chip mx-auto mb-5 flex w-fit border-amber-400/35 bg-amber-400/10 text-amber-100">
+            <Trophy size={14} /> Premiação
           </span>
-          <h2 className="font-display text-3xl font-extrabold sm:text-4xl">
-            <span className="text-gold">{tournament.prize}</span>
-          </h2>
-          <p className="mt-2 flex items-center justify-center gap-1 text-body">
-            <Heart size={15} className="text-pink-400" /> Quem cravar mais leva Uma Inscrição do Amor que pensa. Tá esperando o quê?
-          </p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {(tournament.prizes || []).map((p, i) => (
+              <div key={p.place} className="rounded-2xl border border-white/10 bg-black/30 p-4 text-center">
+                <div className="text-3xl">{['🥇', '🥈', '🥉'][i] || '🏅'}</div>
+                <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-amber-200/80">
+                  {p.place}
+                </div>
+                <div className="mt-1 font-display font-bold leading-tight text-white">{p.prize}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </Reveal>
 

@@ -65,14 +65,20 @@ export async function init() {
       nome       TEXT NOT NULL,
       celula     TEXT NOT NULL DEFAULT '',
       selecao    TEXT NOT NULL DEFAULT '',
-      telefone   TEXT NOT NULL,
+      email      TEXT,
+      telefone   TEXT NOT NULL DEFAULT '',
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
   `);
-  // Telefone único pelos dígitos (ignora máscara/formatação).
+  // Migrações p/ bancos já existentes: adiciona e-mail e torna telefone opcional.
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT;`);
+  await pool.query(`ALTER TABLE users ALTER COLUMN telefone DROP NOT NULL;`);
+  await pool.query(`ALTER TABLE users ALTER COLUMN telefone SET DEFAULT '';`);
+  await pool.query(`DROP INDEX IF EXISTS users_phone_digits;`);
+  // Login por e-mail (sem senha): e-mail único, ignorando maiúsculas/minúsculas.
   await pool.query(`
-    CREATE UNIQUE INDEX IF NOT EXISTS users_phone_digits
-    ON users ((regexp_replace(telefone, '[^0-9]', '', 'g')));
+    CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower
+    ON users ((lower(email)));
   `);
 
   await pool.query(`
@@ -89,6 +95,17 @@ export async function init() {
     CREATE TABLE IF NOT EXISTS meta (
       key   TEXT PRIMARY KEY,
       value TEXT NOT NULL
+    );
+  `);
+
+  // Pontos manuais de presença (culto, célula, visitantes).
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS activities (
+      id         SERIAL PRIMARY KEY,
+      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      kind       TEXT NOT NULL,
+      points     INTEGER NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
   `);
 
@@ -162,7 +179,7 @@ export async function updateMatch(id, p) {
 // ----------------------------- Usuários -------------------------------------
 export function publicUser(u) {
   if (!u) return null;
-  return { id: u.id, nome: u.nome, celula: u.celula, selecao: u.selecao, telefone: u.telefone };
+  return { id: u.id, nome: u.nome, celula: u.celula, selecao: u.selecao, email: u.email, telefone: u.telefone };
 }
 
 export async function getUsers() {
@@ -175,8 +192,17 @@ export async function getUserById(id) {
   return rows[0] || null;
 }
 
+export async function findUserByEmail(email) {
+  const { rows } = await pool.query(
+    `SELECT * FROM users WHERE lower(email) = lower($1) LIMIT 1`,
+    [String(email || '').trim()]
+  );
+  return rows[0] || null;
+}
+
 export async function findUserByPhone(tel) {
   const t = normalizePhone(tel);
+  if (!t) return null;
   const { rows } = await pool.query(
     `SELECT * FROM users WHERE regexp_replace(telefone, '[^0-9]', '', 'g') = $1 LIMIT 1`,
     [t]
@@ -184,10 +210,16 @@ export async function findUserByPhone(tel) {
   return rows[0] || null;
 }
 
-export async function addUser({ nome, celula, selecao, telefone }) {
+export async function addUser({ nome, celula, selecao, email, telefone }) {
   const { rows } = await pool.query(
-    `INSERT INTO users (nome, celula, selecao, telefone) VALUES ($1,$2,$3,$4) RETURNING *`,
-    [String(nome).trim(), String(celula || '').trim(), String(selecao || '').trim(), String(telefone).trim()]
+    `INSERT INTO users (nome, celula, selecao, email, telefone) VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+    [
+      String(nome).trim(),
+      String(celula || '').trim(),
+      String(selecao || '').trim(),
+      String(email).trim().toLowerCase(),
+      String(telefone || '').trim(),
+    ]
   );
   return rows[0];
 }
@@ -197,6 +229,67 @@ export async function getCelulas() {
     `SELECT DISTINCT celula FROM users WHERE celula <> '' ORDER BY celula`
   );
   return rows.map((r) => r.celula);
+}
+
+export async function updateUser(id, { nome, celula, selecao, email, telefone }) {
+  const { rows } = await pool.query(
+    `UPDATE users
+       SET nome = $2, celula = $3, selecao = $4, email = $5, telefone = $6
+     WHERE id = $1
+     RETURNING *`,
+    [
+      id,
+      String(nome || '').trim(),
+      String(celula || '').trim(),
+      String(selecao || '').trim(),
+      email ? String(email).trim().toLowerCase() : null,
+      String(telefone || '').trim(),
+    ]
+  );
+  return rows[0] || null;
+}
+
+export async function deleteUser(id) {
+  const { rowCount } = await pool.query('DELETE FROM users WHERE id = $1', [id]);
+  return rowCount > 0;
+}
+
+// ----------------------------- Presença (pontos manuais) --------------------
+export async function addActivity(userId, kind, points) {
+  const { rows } = await pool.query(
+    `INSERT INTO activities (user_id, kind, points) VALUES ($1, $2, $3) RETURNING *`,
+    [userId, kind, points]
+  );
+  return rows[0];
+}
+
+export async function deleteActivity(id) {
+  const { rowCount } = await pool.query('DELETE FROM activities WHERE id = $1', [id]);
+  return rowCount > 0;
+}
+
+export async function getActivityTotals() {
+  const { rows } = await pool.query(
+    'SELECT user_id, COALESCE(SUM(points), 0)::int AS total FROM activities GROUP BY user_id'
+  );
+  const map = {};
+  for (const r of rows) map[r.user_id] = r.total;
+  return map;
+}
+
+export async function getUserActivityTotal(userId) {
+  const { rows } = await pool.query(
+    'SELECT COALESCE(SUM(points), 0)::int AS total FROM activities WHERE user_id = $1',
+    [userId]
+  );
+  return rows[0]?.total || 0;
+}
+
+export async function getAllActivities() {
+  const { rows } = await pool.query(
+    'SELECT id, user_id, kind, points, created_at FROM activities ORDER BY created_at DESC'
+  );
+  return rows;
 }
 
 // ----------------------------- Palpites -------------------------------------

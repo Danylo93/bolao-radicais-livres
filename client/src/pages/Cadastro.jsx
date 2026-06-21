@@ -95,7 +95,7 @@ export default function Cadastro() {
           </select>
         </Field>
 
-        <Field icon={Phone} label="Telefone (WhatsApp)">
+        <Field icon={Phone} label="Telefone (seu login)">
           <input
             className="input"
             value={form.telefone}

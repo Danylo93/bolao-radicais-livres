@@ -1,33 +1,53 @@
 import { Link } from 'react-router-dom';
-import { ScrollText, Trophy, Target, Clock, Award, Heart, ShieldCheck } from 'lucide-react';
+import { ScrollText, Trophy, Target, Clock, Award, Heart, ShieldCheck, Users } from 'lucide-react';
 import { useStore } from '../store';
 import { PageHeader, Reveal } from '../components/ui';
 
+const ACTIVITY_DESC = {
+  culto: 'Presença no culto de jovens.',
+  culto_domingo: 'Presença no culto de domingo.',
+  celula: 'Presença na sua célula.',
+  visitante: 'A cada visitante que você trouxer.',
+};
+
+const MEDALS = ['🥇', '🥈', '🥉'];
+
 export default function Regras() {
   const { state } = useStore();
-  const { rules, tournament } = state;
+  const { rules, tournament, activities } = state;
 
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader icon={ScrollText} title="Regras do Bolão" subtitle="Simples, justo e pra cima. Bora entender?" />
 
-      {/* Prêmio */}
+      {/* Premiação */}
       <Reveal>
-        <div className="mb-6 overflow-hidden rounded-3xl border border-pink-400/20 bg-gradient-to-r from-pink-500/15 to-amber-400/10 p-6 text-center shadow-pink">
-          <Trophy className="mx-auto text-amber-300" size={28} />
-          <h2 className="mt-2 font-display text-xl font-bold uppercase tracking-wide text-white">Prêmio do grande campeão</h2>
-          <p className="mt-1 font-display text-2xl font-extrabold text-gold">{tournament.prize}</p>
-          <p className="mt-1 flex items-center justify-center gap-1 text-muted">
-            <Heart size={13} className="text-pink-400" /> Pode rir, mas é sério. 😎
-          </p>
+        <div className="mb-6 overflow-hidden rounded-3xl border border-amber-400/25 bg-gradient-to-r from-amber-500/15 to-emerald-600/10 p-6 shadow-gold">
+          <div className="mb-4 flex items-center justify-center gap-2 text-amber-200">
+            <Trophy size={20} />
+            <span className="font-display text-lg font-bold uppercase tracking-wide">Premiação</span>
+          </div>
+          <div className="space-y-2">
+            {(tournament.prizes || []).map((p, i) => (
+              <div key={p.place} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/30 p-3">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-black/40 text-2xl">
+                  {MEDALS[i] || '🏅'}
+                </span>
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-amber-200/80">{p.place}</div>
+                  <div className="font-semibold text-white">{p.prize}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </Reveal>
 
-      {/* Pontuação */}
+      {/* Pontuação dos jogos */}
       <Reveal delay={0.05}>
         <section className="card mb-6 p-6">
           <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-bold">
-            <Target size={20} className="text-emerald-300" /> Como pontuar
+            <Target size={20} className="text-emerald-300" /> Pontuação dos jogos
           </h2>
           <div className="space-y-3">
             <Rule pts={rules.exact} tone="amber" title="Placar exato">
@@ -49,6 +69,26 @@ export default function Regras() {
         </section>
       </Reveal>
 
+      {/* Pontos de presença */}
+      <Reveal delay={0.08}>
+        <section className="card mb-6 p-6">
+          <h2 className="mb-1 flex items-center gap-2 font-display text-xl font-bold">
+            <Users size={20} className="text-amber-300" /> Pontos de presença
+          </h2>
+          <p className="mb-4 text-muted">
+            Ser frequente nas <b className="text-white">células</b> e <b className="text-white">cultos</b> também vale ponto! 🙌
+            O organizador lança esses pontos manualmente e eles somam no seu total.
+          </p>
+          <div className="space-y-3">
+            {(activities || []).map((a) => (
+              <Rule key={a.kind} pts={a.points} tone="amber" title={a.label}>
+                {ACTIVITY_DESC[a.kind] || 'Pontos de presença.'}
+              </Rule>
+            ))}
+          </div>
+        </section>
+      </Reveal>
+
       {/* Regras gerais */}
       <Reveal delay={0.1}>
         <section className="card mb-6 p-6">
@@ -59,8 +99,8 @@ export default function Regras() {
             <Item icon={Clock} title="Palpite até o apito inicial">
               Cada jogo fecha pra palpite no horário de início. Depois disso, não dá mais pra mexer naquele jogo.
             </Item>
-            <Item icon={Target} title="Palpite em todos os jogos">
-              Dá pra palpitar na fase de grupos e no mata-mata. Os jogos do mata-mata abrem assim que as seleções são definidas.
+            <Item icon={Users} title="Frequência conta ponto">
+              Vá aos cultos e à sua célula, e traga visitantes — o organizador lança esses pontos e eles entram no ranking.
             </Item>
             <Item icon={Award} title="Critério de desempate">
               Em caso de empate em pontos, vence quem tiver <b>mais placares cravados</b>. Persistindo, quem

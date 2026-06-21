@@ -219,7 +219,7 @@ export function LiveMatchCard({ match, bet, rules, index = 0 }) {
               {bet.home} × {bet.away}
             </span>
           ) : (
-            <span className="text-faint">Sem palpite</span>
+            <span className="chip border-dashed border-white/25 text-faint">Você não palpitou</span>
           )}
         </div>
         {projection && (

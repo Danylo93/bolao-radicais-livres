@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import * as db from './db.js';
-import { TOURNAMENT, RULES, TEAMS, PHASE_ORDER } from './data.js';
+import { TOURNAMENT, RULES, TEAMS, PHASE_ORDER, ACTIVITIES, ACTIVITY_POINTS } from './data.js';
 import { computeRanking } from './scoring.js';
 import { maybeSync, syncMatches } from './sync.js';
 
@@ -55,29 +55,39 @@ app.get('/api/state', wrap(async (req, res) => {
     rules: RULES,
     teams: TEAMS,
     phaseOrder: PHASE_ORDER,
+    activities: ACTIVITIES,
     matches: matches.map(withOpen),
     celulas,
     stats: buildStats(matches, users.length),
   });
 }));
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 app.post('/api/register', wrap(async (req, res) => {
-  const { nome, celula, selecao, telefone } = req.body || {};
+  const { nome, celula, selecao, email, telefone } = req.body || {};
   if (!nome || !String(nome).trim()) return res.status(400).json({ error: 'Informe seu nome.' });
   if (!telefone || db.normalizePhone(telefone).length < 10)
     return res.status(400).json({ error: 'Informe um telefone válido com DDD.' });
+  if (email && !EMAIL_RE.test(String(email).trim()))
+    return res.status(400).json({ error: 'E-mail inválido.' });
+  if (await db.findUserByPhone(telefone))
+    return res.status(409).json({ error: 'Esse telefone já está cadastrado. Use "Já participo".' });
   try {
-    const user = await db.addUser({ nome, celula, selecao, telefone });
+    const user = await db.addUser({ nome, celula, selecao, email, telefone });
     res.status(201).json({ user: db.publicUser(user) });
   } catch (e) {
     if (e.code === '23505')
-      return res.status(409).json({ error: 'Esse telefone já está cadastrado. Use "Já participo".' });
+      return res.status(409).json({ error: 'Telefone ou e-mail já cadastrado. Use "Já participo".' });
     throw e;
   }
 }));
 
+// Login sem senha: basta o telefone do cadastro.
 app.post('/api/login', wrap(async (req, res) => {
   const { telefone } = req.body || {};
+  if (!telefone || db.normalizePhone(telefone).length < 10)
+    return res.status(400).json({ error: 'Informe um telefone válido com DDD.' });
   const user = await db.findUserByPhone(telefone);
   if (!user) return res.status(404).json({ error: 'Telefone não encontrado. Faça seu cadastro.' });
   res.json({ user: db.publicUser(user) });
@@ -86,8 +96,11 @@ app.post('/api/login', wrap(async (req, res) => {
 app.get('/api/users/:id', wrap(async (req, res) => {
   const user = await db.getUserById(Number(req.params.id));
   if (!user) return res.status(404).json({ error: 'Participante não encontrado.' });
-  const bets = await db.getUserBets(user.id);
-  res.json({ user: db.publicUser(user), bets });
+  const [bets, bonusPoints] = await Promise.all([
+    db.getUserBets(user.id),
+    db.getUserActivityTotal(user.id),
+  ]);
+  res.json({ user: db.publicUser(user), bets, bonusPoints });
 }));
 
 app.post('/api/users/:id/bets', wrap(async (req, res) => {
@@ -124,8 +137,13 @@ app.post('/api/users/:id/bets', wrap(async (req, res) => {
 
 app.get('/api/ranking', wrap(async (req, res) => {
   await maybeSync();
-  const [users, bets, matches] = await Promise.all([db.getUsers(), db.getAllBets(), db.getMatches()]);
-  res.json({ ranking: computeRanking(users, bets, matches) });
+  const [users, bets, matches, bonus] = await Promise.all([
+    db.getUsers(),
+    db.getAllBets(),
+    db.getMatches(),
+    db.getActivityTotals(),
+  ]);
+  res.json({ ranking: computeRanking(users, bets, matches, bonus) });
 }));
 
 // ----------------------------- API: admin ----------------------------------
@@ -136,8 +154,53 @@ app.post('/api/admin/login', (req, res) => {
 });
 
 app.get('/api/admin/users', requireAdmin, wrap(async (req, res) => {
-  const users = await db.getUsers();
-  res.json({ users });
+  const [users, activities] = await Promise.all([db.getUsers(), db.getAllActivities()]);
+  const byUser = {};
+  for (const a of activities) (byUser[a.user_id] ||= []).push(a);
+  const withActivities = users.map((u) => {
+    const acts = byUser[u.id] || [];
+    return { ...u, activities: acts, bonus: acts.reduce((s, a) => s + a.points, 0) };
+  });
+  res.json({ users: withActivities });
+}));
+
+app.post('/api/admin/users/:id', requireAdmin, wrap(async (req, res) => {
+  const { nome, celula, selecao, email, telefone } = req.body || {};
+  if (!nome || !String(nome).trim()) return res.status(400).json({ error: 'Informe o nome.' });
+  if (email && !EMAIL_RE.test(String(email).trim()))
+    return res.status(400).json({ error: 'E-mail inválido.' });
+  try {
+    const user = await db.updateUser(Number(req.params.id), { nome, celula, selecao, email, telefone });
+    if (!user) return res.status(404).json({ error: 'Participante não encontrado.' });
+    res.json({ user: db.publicUser(user) });
+  } catch (e) {
+    if (e.code === '23505')
+      return res.status(409).json({ error: 'Esse e-mail já está em uso por outro participante.' });
+    throw e;
+  }
+}));
+
+app.delete('/api/admin/users/:id', requireAdmin, wrap(async (req, res) => {
+  const ok = await db.deleteUser(Number(req.params.id));
+  if (!ok) return res.status(404).json({ error: 'Participante não encontrado.' });
+  res.json({ ok: true });
+}));
+
+// Pontos manuais de presença (culto, célula, visitantes).
+app.post('/api/admin/users/:id/activity', requireAdmin, wrap(async (req, res) => {
+  const { kind } = req.body || {};
+  const points = ACTIVITY_POINTS[kind];
+  if (points == null) return res.status(400).json({ error: 'Tipo de presença inválido.' });
+  const user = await db.getUserById(Number(req.params.id));
+  if (!user) return res.status(404).json({ error: 'Participante não encontrado.' });
+  const activity = await db.addActivity(user.id, kind, points);
+  res.status(201).json({ activity });
+}));
+
+app.delete('/api/admin/activities/:id', requireAdmin, wrap(async (req, res) => {
+  const ok = await db.deleteActivity(Number(req.params.id));
+  if (!ok) return res.status(404).json({ error: 'Lançamento não encontrado.' });
+  res.json({ ok: true });
 }));
 
 app.post('/api/admin/match/:id', requireAdmin, wrap(async (req, res) => {

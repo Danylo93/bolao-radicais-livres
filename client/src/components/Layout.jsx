@@ -20,7 +20,7 @@ function Brand() {
       <div className="leading-none">
         <span className="font-display text-lg font-extrabold tracking-tight text-white">BOLÃO RL</span>
         <span className="block text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300/90">
-          Copa 2026
+          São Miguel
         </span>
       </div>
     </Link>

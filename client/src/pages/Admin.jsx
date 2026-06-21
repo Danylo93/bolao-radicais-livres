@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, KeyRound, Loader2, Save, LogOut, RotateCcw, Search, Trash2, Users, RefreshCw } from 'lucide-react';
+import {
+  Shield, KeyRound, Loader2, Save, LogOut, RotateCcw, Search, Trash2, Users,
+  RefreshCw, CalendarDays, Mail, AlertTriangle,
+} from 'lucide-react';
 import { useStore } from '../store';
 import { api } from '../api';
 import { PageHeader, Loading } from '../components/ui';
@@ -19,8 +22,14 @@ export default function Admin() {
   const [key, setKey] = useState(() => localStorage.getItem(KEY_STORE) || '');
   const [authed, setAuthed] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [view, setView] = useState('jogos');
   const [phase, setPhase] = useState('todas');
+  const [query, setQuery] = useState('');
   const [syncing, setSyncing] = useState(false);
+
+  const [users, setUsers] = useState(null);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [userQuery, setUserQuery] = useState('');
 
   const login = async (e) => {
     e.preventDefault();
@@ -37,6 +46,22 @@ export default function Admin() {
     }
   };
 
+  const loadUsers = useCallback(async () => {
+    setLoadingUsers(true);
+    try {
+      const { users } = await api.adminUsers(key);
+      setUsers(users);
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      setLoadingUsers(false);
+    }
+  }, [key, toast]);
+
+  useEffect(() => {
+    if (authed && view === 'participantes' && users === null) loadUsers();
+  }, [authed, view, users, loadUsers]);
+
   const reset = async (what) => {
     const msg =
       what === 'participants'
@@ -46,6 +71,7 @@ export default function Admin() {
     try {
       await api.adminReset(key, what);
       await refresh();
+      setUsers(null);
       toast('Pronto! ✅');
     } catch (err) {
       toast(err.message, 'error');
@@ -109,12 +135,22 @@ export default function Admin() {
       );
     });
 
+  const filteredUsers = (users || []).filter((u) => {
+    if (!userQuery.trim()) return true;
+    const q = userQuery.toLowerCase();
+    return (
+      u.nome.toLowerCase().includes(q) ||
+      (u.email || '').toLowerCase().includes(q) ||
+      (u.celula || '').toLowerCase().includes(q)
+    );
+  });
+
   return (
     <div>
       <PageHeader
         icon={Shield}
         title="Painel do organizador"
-        subtitle="Placares sincronizam automaticamente a cada 5 min. Use o admin só para ajustes."
+        subtitle="Gerencie jogos e participantes do Bolão RL."
       />
 
       <div className="card mb-5 flex flex-wrap items-center gap-3 border-amber-400/20 p-4">
@@ -143,31 +179,88 @@ export default function Admin() {
         </div>
       </div>
 
-      <div className="card mb-6 flex flex-col gap-3 p-4 sm:flex-row">
-        <select className="input sm:max-w-[14rem]" value={phase} onChange={(e) => setPhase(e.target.value)}>
-          <option value="todas">Todas as fases</option>
-          {state.phaseOrder.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
-          ))}
-        </select>
-        <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-faint)]" />
-          <input
-            className="input pl-9"
-            placeholder="Buscar jogo, seleção ou ID…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        {matches.map((m) => (
-          <AdminMatchRow key={m.id} match={m} adminKey={key} teams={state.teams} onSaved={refresh} toast={toast} />
+      {/* Alternância Jogos / Participantes */}
+      <div className="mb-6 grid max-w-md grid-cols-2 gap-1 rounded-2xl bg-white/5 p-1">
+        {[
+          { k: 'jogos', label: 'Jogos', icon: CalendarDays },
+          { k: 'participantes', label: 'Participantes', icon: Users },
+        ].map((t) => (
+          <button
+            key={t.k}
+            onClick={() => setView(t.k)}
+            className={`flex items-center justify-center gap-2 rounded-xl py-2 text-sm font-semibold transition ${
+              view === t.k ? 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-night' : 'text-slate-300 hover:bg-white/5'
+            }`}
+          >
+            <t.icon size={16} /> {t.label}
+          </button>
         ))}
       </div>
+
+      {view === 'jogos' ? (
+        <>
+          <div className="card mb-6 flex flex-col gap-3 p-4 sm:flex-row">
+            <select className="input sm:max-w-[14rem]" value={phase} onChange={(e) => setPhase(e.target.value)}>
+              <option value="todas">Todas as fases</option>
+              {state.phaseOrder.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+            <div className="relative flex-1">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-faint)]" />
+              <input
+                className="input pl-9"
+                placeholder="Buscar jogo, seleção ou ID…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {matches.map((m) => (
+              <AdminMatchRow key={m.id} match={m} adminKey={key} teams={state.teams} onSaved={refresh} toast={toast} />
+            ))}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="mb-4 flex items-center gap-3">
+            <div className="relative flex-1">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-faint)]" />
+              <input
+                className="input pl-9"
+                placeholder="Buscar por nome, e-mail ou célula…"
+                value={userQuery}
+                onChange={(e) => setUserQuery(e.target.value)}
+              />
+            </div>
+            <button onClick={loadUsers} className="btn-ghost px-3 py-2 text-xs">
+              <RefreshCw size={14} /> Atualizar
+            </button>
+          </div>
+
+          {loadingUsers || users === null ? (
+            <Loading label="Carregando participantes…" />
+          ) : filteredUsers.length === 0 ? (
+            <div className="card p-8 text-center text-muted">Nenhum participante encontrado.</div>
+          ) : (
+            <div className="space-y-3">
+              {filteredUsers.map((u) => (
+                <AdminUserRow
+                  key={u.id}
+                  user={u}
+                  adminKey={key}
+                  teams={state.teams}
+                  activities={state.activities}
+                  onChanged={async () => { await loadUsers(); await refresh(); }}
+                  toast={toast}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -248,6 +341,157 @@ function AdminMatchRow({ match, adminKey, teams, onSaved, toast }) {
           <input type="checkbox" checked={finished} onChange={(e) => setFinished(e.target.checked)} className="h-4 w-4 accent-emerald-400" />
           Encerrado
         </label>
+        <button onClick={save} disabled={busy} className="btn-primary ml-auto px-4 py-2 text-sm">
+          {busy ? <Loader2 className="animate-spin" size={15} /> : <Save size={15} />} Salvar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AdminUserRow({ user, adminKey, teams, activities, onChanged, toast }) {
+  const [nome, setNome] = useState(user.nome);
+  const [email, setEmail] = useState(user.email || '');
+  const [telefone, setTelefone] = useState(user.telefone || '');
+  const [celula, setCelula] = useState(user.celula || '');
+  const [selecao, setSelecao] = useState(user.selecao || '');
+  const [busy, setBusy] = useState(false);
+
+  const save = async () => {
+    setBusy(true);
+    try {
+      await api.adminUpdateUser(adminKey, user.id, { nome, email, telefone, celula, selecao });
+      await onChanged();
+      toast(`${nome.split(' ')[0]} atualizado ✅`);
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async () => {
+    if (!window.confirm(`Remover ${user.nome}? Os palpites dele também serão apagados.`)) return;
+    setBusy(true);
+    try {
+      await api.adminDeleteUser(adminKey, user.id);
+      await onChanged();
+      toast('Participante removido.', 'info');
+    } catch (err) {
+      toast(err.message, 'error');
+      setBusy(false);
+    }
+  };
+
+  const labelByKind = Object.fromEntries((activities || []).map((a) => [a.kind, a.label]));
+
+  const addAct = async (kind) => {
+    setBusy(true);
+    try {
+      await api.adminAddActivity(adminKey, user.id, kind);
+      await onChanged();
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const removeAct = async (id) => {
+    setBusy(true);
+    try {
+      await api.adminDeleteActivity(adminKey, id);
+      await onChanged();
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="card p-4">
+      <div className="mb-3 flex items-center justify-between text-faint">
+        <span className="chip">#{user.id}</span>
+        {!user.telefone && (
+          <span className="inline-flex items-center gap-1 text-xs text-amber-300">
+            <AlertTriangle size={13} /> sem telefone — não consegue logar
+          </span>
+        )}
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2">
+        <label className="block">
+          <span className="mb-1 block text-faint">Nome</span>
+          <input className="input py-2 text-sm" value={nome} onChange={(e) => setNome(e.target.value)} />
+        </label>
+        <label className="block">
+          <span className="mb-1 flex items-center gap-1 text-faint"><Mail size={12} /> E-mail (opcional)</span>
+          <input className="input py-2 text-sm" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-faint">Telefone</span>
+          <input className="input py-2 text-sm" value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(11) 99999-9999" />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-faint">Célula</span>
+          <input className="input py-2 text-sm" value={celula} onChange={(e) => setCelula(e.target.value)} />
+        </label>
+        <label className="block sm:col-span-2">
+          <span className="mb-1 block text-faint">Seleção do coração</span>
+          <select className="input py-2 text-sm" value={selecao} onChange={(e) => setSelecao(e.target.value)}>
+            <option value="">—</option>
+            {teams.map((t) => (
+              <option key={t.name} value={t.name}>{t.flag} {t.name}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      {/* Presença — pontos manuais */}
+      <div className="mt-3 rounded-2xl border border-amber-400/15 bg-amber-400/5 p-3">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-faint">Presença (pontos manuais)</span>
+          <span className="chip border-amber-400/30 bg-amber-400/10 text-amber-200">+{user.bonus || 0} pts</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {(activities || []).map((a) => (
+            <button
+              key={a.kind}
+              onClick={() => addAct(a.kind)}
+              disabled={busy}
+              className="btn-ghost px-2.5 py-1.5 text-xs"
+            >
+              + {a.label} ({a.points})
+            </button>
+          ))}
+        </div>
+        {user.activities && user.activities.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {user.activities.map((act) => (
+              <span
+                key={act.id}
+                className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px]"
+              >
+                {labelByKind[act.kind] || act.kind} +{act.points}
+                <button
+                  onClick={() => removeAct(act.id)}
+                  disabled={busy}
+                  className="text-rose-300 hover:text-rose-200"
+                  title="Remover lançamento"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-3 flex items-center gap-2">
+        <button onClick={remove} disabled={busy} className="btn-ghost px-3 py-2 text-xs text-rose-300">
+          <Trash2 size={14} /> Remover
+        </button>
         <button onClick={save} disabled={busy} className="btn-primary ml-auto px-4 py-2 text-sm">
           {busy ? <Loader2 className="animate-spin" size={15} /> : <Save size={15} />} Salvar
         </button>

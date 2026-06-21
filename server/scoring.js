@@ -39,14 +39,14 @@ export function classify(pred, match) {
   return { pts, label: 'Não pontuou', tone: 'zero' };
 }
 
-// Monta o ranking geral a partir de usuários, palpites e jogos.
-export function computeRanking(users, betsByUser, matches) {
+// Monta o ranking geral: pontos de palpites + pontos manuais de presença.
+export function computeRanking(users, betsByUser, matches, bonusByUser = {}) {
   const matchById = Object.fromEntries(matches.map((m) => [m.id, m]));
 
   return users
     .map((u) => {
       const ub = betsByUser[u.id] || {};
-      let points = 0;
+      let matchPoints = 0;
       let exacts = 0;
       let hits = 0;
       let played = 0;
@@ -57,14 +57,17 @@ export function computeRanking(users, betsByUser, matches) {
         played += 1;
         if (p > 0) hits += 1;
         if (p === RULES.exact) exacts += 1;
-        points += p;
+        matchPoints += p;
       }
+      const bonusPoints = bonusByUser[u.id] || 0;
       return {
         id: u.id,
         nome: u.nome,
         celula: u.celula,
         selecao: u.selecao,
-        points,
+        matchPoints,
+        bonusPoints,
+        points: matchPoints + bonusPoints,
         exacts,
         hits,
         played,

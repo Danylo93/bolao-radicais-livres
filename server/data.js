@@ -1,16 +1,32 @@
 // ============================================================================
 //  BOLÃO RL — Dados REAIS da Copa do Mundo FIFA 2026
 //  Fonte: Wikipédia (2026 FIFA World Cup, páginas dos Grupos A–L) — jun/2026.
-//  Grupos, confrontos, datas e placares da fase de grupos são reais.
+//  Grupos, confrontos, DATAS/HORÁRIOS e placares da fase de grupos são reais.
+//  Horários armazenados em UTC (com sufixo Z); a interface mostra no fuso de
+//  quem acessa (em São Miguel/BR = horário de Brasília).
 //  Mata-mata: vagas com times "A definir" (preencher no painel conforme a Copa).
 // ============================================================================
 
 export const TOURNAMENT = {
-  name: 'Bolão RL',
+  name: 'Bolão RL São Miguel',
   subtitle: 'Copa RL São Miguel 2026',
-  prize: '1 amor que pensa em novembro 💘',
+  prizes: [
+    { place: '1º Lugar', prize: '1 inscrição do Amor que Pensa', emoji: '💘' },
+    { place: '2º Lugar', prize: '1 Camiseta dos RL São Miguel', emoji: '👕' },
+    { place: '3º Lugar', prize: 'Comunhão com os Discipuladores Jovens', emoji: '🤝' },
+  ],
   edition: 'Edição São Miguel • Jovens RL',
 };
+
+// Pontuação MANUAL de presença/frequência (lançada pelo organizador no /admin).
+export const ACTIVITIES = [
+  { kind: 'culto', label: 'Culto', points: 15 },
+  { kind: 'culto_domingo', label: 'Culto de domingo', points: 10 },
+  { kind: 'celula', label: 'Célula', points: 5 },
+  { kind: 'visitante', label: 'Trouxe visitante', points: 10 },
+];
+export const ACTIVITY_POINTS = Object.fromEntries(ACTIVITIES.map((a) => [a.kind, a.points]));
+export const ACTIVITY_LABELS = Object.fromEntries(ACTIVITIES.map((a) => [a.kind, a.label]));
 
 // Regras de pontuação (pontos por jogo).
 export const RULES = {
@@ -87,91 +103,92 @@ const GROUPS_EN = {
   L: ['England', 'Croatia', 'Ghana', 'Panama'],
 };
 
-// Confrontos reais da fase de grupos: [grupo, mandante, visitante, data, placar|null]
+// Confrontos reais da fase de grupos: [grupo, mandante, visitante, kickoff(UTC), placar|null]
+// Horários convertidos do horário local de cada sede para UTC.
 const GROUP_FIXTURES = [
-  ['A', 'Mexico', 'South Africa', '2026-06-11', '2-0'],
-  ['A', 'South Korea', 'Czech Republic', '2026-06-11', '2-1'],
-  ['A', 'Czech Republic', 'South Africa', '2026-06-18', '1-1'],
-  ['A', 'Mexico', 'South Korea', '2026-06-18', '1-0'],
-  ['A', 'Czech Republic', 'Mexico', '2026-06-24', null],
-  ['A', 'South Africa', 'South Korea', '2026-06-24', null],
+  ['A', 'Mexico', 'South Africa', '2026-06-11T19:00:00Z', '2-0'],
+  ['A', 'South Korea', 'Czech Republic', '2026-06-12T02:00:00Z', '2-1'],
+  ['A', 'Czech Republic', 'South Africa', '2026-06-18T16:00:00Z', '1-1'],
+  ['A', 'Mexico', 'South Korea', '2026-06-19T01:00:00Z', '1-0'],
+  ['A', 'Czech Republic', 'Mexico', '2026-06-25T01:00:00Z', null],
+  ['A', 'South Africa', 'South Korea', '2026-06-25T01:00:00Z', null],
 
-  ['B', 'Canada', 'Bosnia and Herzegovina', '2026-06-12', '1-1'],
-  ['B', 'Qatar', 'Switzerland', '2026-06-13', '1-1'],
-  ['B', 'Switzerland', 'Bosnia and Herzegovina', '2026-06-18', '4-1'],
-  ['B', 'Canada', 'Qatar', '2026-06-18', '6-0'],
-  ['B', 'Switzerland', 'Canada', '2026-06-24', null],
-  ['B', 'Bosnia and Herzegovina', 'Qatar', '2026-06-24', null],
+  ['B', 'Canada', 'Bosnia and Herzegovina', '2026-06-12T19:00:00Z', '1-1'],
+  ['B', 'Qatar', 'Switzerland', '2026-06-13T19:00:00Z', '1-1'],
+  ['B', 'Switzerland', 'Bosnia and Herzegovina', '2026-06-18T19:00:00Z', '4-1'],
+  ['B', 'Canada', 'Qatar', '2026-06-18T22:00:00Z', '6-0'],
+  ['B', 'Switzerland', 'Canada', '2026-06-24T19:00:00Z', null],
+  ['B', 'Bosnia and Herzegovina', 'Qatar', '2026-06-24T19:00:00Z', null],
 
-  ['C', 'Brazil', 'Morocco', '2026-06-13', '1-1'],
-  ['C', 'Haiti', 'Scotland', '2026-06-13', '0-1'],
-  ['C', 'Scotland', 'Morocco', '2026-06-19', '0-1'],
-  ['C', 'Brazil', 'Haiti', '2026-06-19', '3-0'],
-  ['C', 'Scotland', 'Brazil', '2026-06-24', null],
-  ['C', 'Morocco', 'Haiti', '2026-06-24', null],
+  ['C', 'Brazil', 'Morocco', '2026-06-13T22:00:00Z', '1-1'],
+  ['C', 'Haiti', 'Scotland', '2026-06-14T01:00:00Z', '0-1'],
+  ['C', 'Scotland', 'Morocco', '2026-06-19T22:00:00Z', '0-1'],
+  ['C', 'Brazil', 'Haiti', '2026-06-20T00:30:00Z', '3-0'],
+  ['C', 'Scotland', 'Brazil', '2026-06-24T22:00:00Z', null],
+  ['C', 'Morocco', 'Haiti', '2026-06-24T22:00:00Z', null],
 
-  ['D', 'United States', 'Paraguay', '2026-06-12', '4-1'],
-  ['D', 'Australia', 'Turkey', '2026-06-13', '2-0'],
-  ['D', 'United States', 'Australia', '2026-06-19', '2-0'],
-  ['D', 'Turkey', 'Paraguay', '2026-06-19', '0-1'],
-  ['D', 'Turkey', 'United States', '2026-06-25', null],
-  ['D', 'Paraguay', 'Australia', '2026-06-25', null],
+  ['D', 'United States', 'Paraguay', '2026-06-13T01:00:00Z', '4-1'],
+  ['D', 'Australia', 'Turkey', '2026-06-14T04:00:00Z', '2-0'],
+  ['D', 'United States', 'Australia', '2026-06-19T19:00:00Z', '2-0'],
+  ['D', 'Turkey', 'Paraguay', '2026-06-20T03:00:00Z', '0-1'],
+  ['D', 'Turkey', 'United States', '2026-06-26T02:00:00Z', null],
+  ['D', 'Paraguay', 'Australia', '2026-06-26T02:00:00Z', null],
 
-  ['E', 'Germany', 'Curaçao', '2026-06-14', '7-1'],
-  ['E', 'Ivory Coast', 'Ecuador', '2026-06-14', '1-0'],
-  ['E', 'Germany', 'Ivory Coast', '2026-06-20', null],
-  ['E', 'Ecuador', 'Curaçao', '2026-06-20', null],
-  ['E', 'Curaçao', 'Ivory Coast', '2026-06-25', null],
-  ['E', 'Ecuador', 'Germany', '2026-06-25', null],
+  ['E', 'Germany', 'Curaçao', '2026-06-14T17:00:00Z', '7-1'],
+  ['E', 'Ivory Coast', 'Ecuador', '2026-06-14T23:00:00Z', '1-0'],
+  ['E', 'Germany', 'Ivory Coast', '2026-06-20T20:00:00Z', null],
+  ['E', 'Ecuador', 'Curaçao', '2026-06-21T00:00:00Z', null],
+  ['E', 'Curaçao', 'Ivory Coast', '2026-06-25T20:00:00Z', null],
+  ['E', 'Ecuador', 'Germany', '2026-06-25T20:00:00Z', null],
 
-  ['F', 'Netherlands', 'Japan', '2026-06-14', '2-2'],
-  ['F', 'Sweden', 'Tunisia', '2026-06-14', '5-1'],
-  ['F', 'Netherlands', 'Sweden', '2026-06-20', null],
-  ['F', 'Tunisia', 'Japan', '2026-06-20', null],
-  ['F', 'Japan', 'Sweden', '2026-06-25', null],
-  ['F', 'Tunisia', 'Netherlands', '2026-06-25', null],
+  ['F', 'Netherlands', 'Japan', '2026-06-14T20:00:00Z', '2-2'],
+  ['F', 'Sweden', 'Tunisia', '2026-06-15T02:00:00Z', '5-1'],
+  ['F', 'Netherlands', 'Sweden', '2026-06-20T17:00:00Z', null],
+  ['F', 'Tunisia', 'Japan', '2026-06-21T04:00:00Z', null],
+  ['F', 'Japan', 'Sweden', '2026-06-25T23:00:00Z', null],
+  ['F', 'Tunisia', 'Netherlands', '2026-06-25T23:00:00Z', null],
 
-  ['G', 'Belgium', 'Egypt', '2026-06-15', '1-1'],
-  ['G', 'Iran', 'New Zealand', '2026-06-15', '2-2'],
-  ['G', 'Belgium', 'Iran', '2026-06-21', null],
-  ['G', 'New Zealand', 'Egypt', '2026-06-21', null],
-  ['G', 'Egypt', 'Iran', '2026-06-26', null],
-  ['G', 'New Zealand', 'Belgium', '2026-06-26', null],
+  ['G', 'Belgium', 'Egypt', '2026-06-15T19:00:00Z', '1-1'],
+  ['G', 'Iran', 'New Zealand', '2026-06-16T01:00:00Z', '2-2'],
+  ['G', 'Belgium', 'Iran', '2026-06-21T19:00:00Z', null],
+  ['G', 'New Zealand', 'Egypt', '2026-06-22T01:00:00Z', null],
+  ['G', 'Egypt', 'Iran', '2026-06-27T03:00:00Z', null],
+  ['G', 'New Zealand', 'Belgium', '2026-06-27T03:00:00Z', null],
 
-  ['H', 'Spain', 'Cape Verde', '2026-06-15', '0-0'],
-  ['H', 'Saudi Arabia', 'Uruguay', '2026-06-15', '1-1'],
-  ['H', 'Spain', 'Saudi Arabia', '2026-06-21', null],
-  ['H', 'Uruguay', 'Cape Verde', '2026-06-21', null],
-  ['H', 'Cape Verde', 'Saudi Arabia', '2026-06-26', null],
-  ['H', 'Uruguay', 'Spain', '2026-06-26', null],
+  ['H', 'Spain', 'Cape Verde', '2026-06-15T16:00:00Z', '0-0'],
+  ['H', 'Saudi Arabia', 'Uruguay', '2026-06-15T22:00:00Z', '1-1'],
+  ['H', 'Spain', 'Saudi Arabia', '2026-06-21T16:00:00Z', null],
+  ['H', 'Uruguay', 'Cape Verde', '2026-06-21T22:00:00Z', null],
+  ['H', 'Cape Verde', 'Saudi Arabia', '2026-06-27T00:00:00Z', null],
+  ['H', 'Uruguay', 'Spain', '2026-06-27T00:00:00Z', null],
 
-  ['I', 'France', 'Senegal', '2026-06-16', '3-1'],
-  ['I', 'Iraq', 'Norway', '2026-06-16', '1-4'],
-  ['I', 'France', 'Iraq', '2026-06-22', null],
-  ['I', 'Norway', 'Senegal', '2026-06-22', null],
-  ['I', 'Norway', 'France', '2026-06-26', null],
-  ['I', 'Senegal', 'Iraq', '2026-06-26', null],
+  ['I', 'France', 'Senegal', '2026-06-16T19:00:00Z', '3-1'],
+  ['I', 'Iraq', 'Norway', '2026-06-16T22:00:00Z', '1-4'],
+  ['I', 'France', 'Iraq', '2026-06-22T21:00:00Z', null],
+  ['I', 'Norway', 'Senegal', '2026-06-23T00:00:00Z', null],
+  ['I', 'Norway', 'France', '2026-06-26T19:00:00Z', null],
+  ['I', 'Senegal', 'Iraq', '2026-06-26T19:00:00Z', null],
 
-  ['J', 'Argentina', 'Algeria', '2026-06-16', '3-0'],
-  ['J', 'Austria', 'Jordan', '2026-06-16', '3-1'],
-  ['J', 'Argentina', 'Austria', '2026-06-22', null],
-  ['J', 'Jordan', 'Algeria', '2026-06-22', null],
-  ['J', 'Algeria', 'Austria', '2026-06-27', null],
-  ['J', 'Jordan', 'Argentina', '2026-06-27', null],
+  ['J', 'Argentina', 'Algeria', '2026-06-17T01:00:00Z', '3-0'],
+  ['J', 'Austria', 'Jordan', '2026-06-17T04:00:00Z', '3-1'],
+  ['J', 'Argentina', 'Austria', '2026-06-22T17:00:00Z', null],
+  ['J', 'Jordan', 'Algeria', '2026-06-23T03:00:00Z', null],
+  ['J', 'Algeria', 'Austria', '2026-06-28T02:00:00Z', null],
+  ['J', 'Jordan', 'Argentina', '2026-06-28T02:00:00Z', null],
 
-  ['K', 'Portugal', 'DR Congo', '2026-06-17', '1-1'],
-  ['K', 'Uzbekistan', 'Colombia', '2026-06-17', '1-3'],
-  ['K', 'Portugal', 'Uzbekistan', '2026-06-23', null],
-  ['K', 'Colombia', 'DR Congo', '2026-06-23', null],
-  ['K', 'Colombia', 'Portugal', '2026-06-27', null],
-  ['K', 'DR Congo', 'Uzbekistan', '2026-06-27', null],
+  ['K', 'Portugal', 'DR Congo', '2026-06-17T17:00:00Z', '1-1'],
+  ['K', 'Uzbekistan', 'Colombia', '2026-06-18T02:00:00Z', '1-3'],
+  ['K', 'Portugal', 'Uzbekistan', '2026-06-23T17:00:00Z', null],
+  ['K', 'Colombia', 'DR Congo', '2026-06-24T02:00:00Z', null],
+  ['K', 'Colombia', 'Portugal', '2026-06-27T23:30:00Z', null],
+  ['K', 'DR Congo', 'Uzbekistan', '2026-06-27T23:30:00Z', null],
 
-  ['L', 'England', 'Croatia', '2026-06-17', '4-2'],
-  ['L', 'Ghana', 'Panama', '2026-06-17', '1-0'],
-  ['L', 'England', 'Ghana', '2026-06-23', null],
-  ['L', 'Panama', 'Croatia', '2026-06-23', null],
-  ['L', 'Panama', 'England', '2026-06-27', null],
-  ['L', 'Croatia', 'Ghana', '2026-06-27', null],
+  ['L', 'England', 'Croatia', '2026-06-17T20:00:00Z', '4-2'],
+  ['L', 'Ghana', 'Panama', '2026-06-17T23:00:00Z', '1-0'],
+  ['L', 'England', 'Ghana', '2026-06-23T20:00:00Z', null],
+  ['L', 'Panama', 'Croatia', '2026-06-23T23:00:00Z', null],
+  ['L', 'Panama', 'England', '2026-06-27T21:00:00Z', null],
+  ['L', 'Croatia', 'Ghana', '2026-06-27T21:00:00Z', null],
 ];
 
 // Lista achatada de seleções (para selects de cadastro / filtros).
@@ -191,12 +208,11 @@ export const PHASE_ORDER = [
 ];
 
 const pad = (n) => String(n).padStart(2, '0');
-const isoAt = (dateStr, hour) => `${dateStr}T${pad(hour)}:00:00-03:00`; // horário de Brasília
-const GROUP_HOURS = [13, 16, 19, 22];
+const isoAtUTC = (dateStr, hour) => `${dateStr}T${pad(hour)}:00:00Z`;
 
 function buildGroupMatches() {
   const out = [];
-  Object.keys(GROUPS_EN).forEach((g, gi) => {
+  Object.keys(GROUPS_EN).forEach((g) => {
     const fixtures = GROUP_FIXTURES.filter((f) => f[0] === g);
     fixtures.forEach(([, homeEn, awayEn, date, score], idx) => {
       const finished = !!score;
@@ -214,7 +230,7 @@ function buildGroupMatches() {
         round: `${Math.floor(idx / 2) + 1}ª rodada`,
         home: T[homeEn],
         away: T[awayEn],
-        date: isoAt(date, GROUP_HOURS[gi % 4]),
+        date, // já em UTC (sufixo Z)
         homeScore: hs,
         awayScore: as,
         finished,
@@ -235,13 +251,13 @@ const KO_PHASES = [
 ];
 
 function spreadDates(start, end, count) {
-  const s = new Date(`${start}T12:00:00-03:00`).getTime();
-  const e = new Date(`${end}T12:00:00-03:00`).getTime();
+  const s = new Date(`${start}T12:00:00Z`).getTime();
+  const e = new Date(`${end}T12:00:00Z`).getTime();
   const out = [];
   for (let i = 0; i < count; i++) {
     const t = count === 1 ? s : s + Math.round(((e - s) * i) / (count - 1));
     const d = new Date(t);
-    out.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
+    out.push(`${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`);
   }
   return out;
 }
@@ -258,7 +274,8 @@ function buildKnockoutMatches() {
         round: phase,
         home: null,
         away: null,
-        date: isoAt(dates[i], i % 2 === 0 ? 16 : 20),
+        // 20h/23h UTC ≈ 17h/20h de Brasília (ajuste no admin quando definir os times).
+        date: isoAtUTC(dates[i], i % 2 === 0 ? 20 : 23),
         homeScore: null,
         awayScore: null,
         finished: false,
