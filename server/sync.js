@@ -62,9 +62,12 @@ async function applyGames(games, source) {
     const patch = {};
     const hs = numScore(ext.homeScore);
     const as = numScore(ext.awayScore);
-    // Só grava placar de jogo que já começou (ao vivo) ou terminou.
-    // Evita gravar 0-0 em jogos ainda não iniciados (a API devolve 0/null antes do apito).
-    const started = ext.finished || ext.live;
+    // Só grava placar de jogo que já começou (ao vivo) ou terminou — E cujo
+    // horário de início já passou. A checagem do horário é à prova de falha:
+    // mesmo que a fonte marque um jogo agendado como "ao vivo" por engano,
+    // um jogo com início no futuro nunca recebe placar (evita 0-0 indevido).
+    const kickedOff = new Date(m.date).getTime() <= Date.now();
+    const started = (ext.finished || ext.live) && kickedOff;
 
     if (started) {
       if (hs != null && m.homeScore !== hs) patch.homeScore = hs;
