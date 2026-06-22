@@ -5,7 +5,7 @@
   "outputDirectory": "client/dist",
   "functions": {
     "api/index.js": {
-      "regions": ["gru1"],
+      "regions": ["iad1"],
       "maxDuration": 30
     }
   },
