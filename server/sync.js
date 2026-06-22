@@ -62,12 +62,16 @@ async function applyGames(games, source) {
     const patch = {};
     const hs = numScore(ext.homeScore);
     const as = numScore(ext.awayScore);
+    // Só grava placar de jogo que já começou (ao vivo) ou terminou.
+    // Evita gravar 0-0 em jogos ainda não iniciados (a API devolve 0/null antes do apito).
+    const started = ext.finished || ext.live;
 
-    if (hs != null && m.homeScore !== hs) patch.homeScore = hs;
-    if (as != null && m.awayScore !== as) patch.awayScore = as;
-
-    if (ext.finished && hs != null && as != null && m.finished !== true) {
-      patch.finished = true;
+    if (started) {
+      if (hs != null && m.homeScore !== hs) patch.homeScore = hs;
+      if (as != null && m.awayScore !== as) patch.awayScore = as;
+      if (ext.finished && hs != null && as != null && m.finished !== true) {
+        patch.finished = true;
+      }
     }
 
     if (!m.home && ext.homeEn) {
