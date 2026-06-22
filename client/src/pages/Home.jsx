@@ -15,6 +15,7 @@ import {
   ListChecks,
   ArrowRight,
   Heart,
+  Clock,
 } from 'lucide-react';
 import { useStore } from '../store';
 import { Reveal, Counter } from '../components/ui';
@@ -25,9 +26,16 @@ const BASE_URL = (import.meta.env.VITE_PUBLIC_URL || window.location.origin).rep
 // O QR Code e o link de divulgação levam direto para a tela de cadastro.
 const SHARE_URL = `${BASE_URL}/cadastro`;
 
+const ACT_DESC = {
+  culto: 'Presença no culto de jovens',
+  culto_domingo: 'Presença no culto de domingo',
+  celula: 'Presença na sua célula',
+  visitante: 'A cada amigo que você trouxer',
+};
+
 export default function Home() {
   const { state, player } = useStore();
-  const { tournament, rules, stats } = state;
+  const { tournament, rules, stats, activities } = state;
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -206,24 +214,77 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PONTUAÇÃO RESUMO */}
+      {/* PONTUAÇÃO */}
       <section>
         <Reveal>
-          <div className="card p-6 sm:p-8">
-            <div className="mb-5 flex items-center justify-between gap-3">
-              <h2 className="font-display text-2xl font-extrabold">Pontuação</h2>
-              <Link to="/regras" className="text-link text-sm">
-                Ver regras completas →
-              </Link>
+          <h2 className="mb-2 text-center font-display text-3xl font-extrabold uppercase tracking-wide text-white text-shadow-sm">
+            Como <span className="text-gradient">pontuar</span>
+          </h2>
+          <p className="mx-auto mb-6 max-w-xl text-center text-body">
+            Você soma pontos <b className="text-white">nos jogos</b> e também sendo <b className="text-amber-200">fiel nos cultos e na célula</b>. Tudo entra no ranking! 🏆
+          </p>
+        </Reveal>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          {/* Jogos */}
+          <Reveal>
+            <div className="card h-full p-6">
+              <h3 className="mb-4 flex items-center gap-2 font-display text-xl font-bold uppercase tracking-wide text-white">
+                ⚽ Nos jogos
+              </h3>
+              <div className="space-y-3">
+                <ScoreRow pts={rules.exact} title="Placar exato" desc="Cravou o resultado certinho" tone="amber" />
+                <ScoreRow pts={rules.resultDiff} title="Vencedor + saldo" desc="Acertou quem ganhou e por quantos" tone="emerald" />
+                <ScoreRow pts={rules.result} title="Só o resultado" desc="Acertou quem venceu, mas errou o saldo" tone="cyan" />
+                <ScoreRow pts={rules.oneTeam} title="Gols de um time" desc="Cravou os gols de uma seleção" tone="slate" />
+              </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <ScoreRow pts={rules.exact} title="Placar exato" desc="Cravou o resultado certinho" tone="amber" />
-              <ScoreRow pts={rules.resultDiff} title="Vencedor + saldo" desc="Acertou quem ganhou e por quantos" tone="emerald" />
-              <ScoreRow pts={rules.result} title="Só o resultado" desc="Acertou quem venceu, mas errou o saldo" tone="cyan" />
-              <ScoreRow pts={rules.oneTeam} title="Gols de um time" desc="Cravou os gols de uma seleção" tone="slate" />
+          </Reveal>
+
+          {/* Presença */}
+          <Reveal delay={0.08}>
+            <div className="card h-full border-amber-400/25 p-6 shadow-gold">
+              <h3 className="mb-1 flex items-center gap-2 font-display text-xl font-bold uppercase tracking-wide text-white">
+                🙌 Na presença
+              </h3>
+              <p className="mb-4 text-sm text-amber-200/90">
+                Ser fiel na casa de Deus vale ponto — lançado pela liderança.
+              </p>
+              <div className="space-y-3">
+                {(activities || []).map((a) => (
+                  <ScoreRow
+                    key={a.kind}
+                    pts={a.points}
+                    title={a.label}
+                    desc={ACT_DESC[a.kind] || 'Pontos de presença'}
+                    tone="amber"
+                  />
+                ))}
+              </div>
             </div>
+          </Reveal>
+        </div>
+
+        {/* Destaque: regras rápidas */}
+        <Reveal delay={0.12}>
+          <div className="card mt-4 grid gap-3 border-amber-400/20 p-5 sm:grid-cols-3">
+            <Quick icon={Clock} title="Palpite até o apito">
+              Cada jogo fecha no horário de início.
+            </Quick>
+            <Quick icon={Users} title="Traga visitantes">
+              Cada amigo vale ponto — e uma vida pra Jesus. ✝️
+            </Quick>
+            <Quick icon={Trophy} title="Desempate">
+              Vence quem tiver mais placares cravados.
+            </Quick>
           </div>
         </Reveal>
+
+        <div className="mt-4 text-center">
+          <Link to="/regras" className="btn-ghost text-sm">
+            Ver regras completas →
+          </Link>
+        </div>
       </section>
 
       {/* CTA FINAL */}
@@ -290,6 +351,20 @@ function NextMatchCard({ next }) {
         )}
       </div>
     </Reveal>
+  );
+}
+
+function Quick({ icon: Icon, title, children }) {
+  return (
+    <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-black/30 p-3">
+      <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-amber-400/15 text-amber-300">
+        <Icon size={18} />
+      </span>
+      <div>
+        <div className="font-semibold text-white">{title}</div>
+        <p className="text-sm text-muted">{children}</p>
+      </div>
+    </div>
   );
 }
 
