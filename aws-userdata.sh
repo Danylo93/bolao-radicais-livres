@@ -77,8 +77,10 @@ SVCEOF
 systemctl daemon-reload
 systemctl enable bolao-rl
 
-# -- Cron sync every 5 minutes --
-echo '*/5 * * * * bolao curl -s -H "Authorization: Bearer bolao-rl-cron-secret-2026" http://localhost:4010/api/cron/sync > /dev/null 2>&1' > /etc/cron.d/bolao-sync
+# -- Cron sync every 5 minutes (lê o CRON_SECRET do .env, sem hardcode) --
+cat > /etc/cron.d/bolao-sync << 'CRONEOF'
+*/5 * * * * bolao bash -c 'curl -s -H "Authorization: Bearer $(grep -E ^CRON_SECRET= /home/bolao/app/server/.env | cut -d= -f2-)" http://localhost:4010/api/cron/sync >/dev/null 2>&1'
+CRONEOF
 chmod 644 /etc/cron.d/bolao-sync
 systemctl enable crond
 systemctl start crond

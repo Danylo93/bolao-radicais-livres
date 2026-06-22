@@ -2,10 +2,17 @@
 set -e
 
 # Deploy script for Bolão RL → EC2
+# IMPORTANTE: este arquivo NÃO contém segredos. As variáveis sensíveis ficam
+# em server/.env (gitignored) e são enviadas por SCP (canal criptografado).
 EC2_IP="52.87.63.44"
-KEY="/Users/danylo-oliveira/.ssh/bolao-rl-key.pem"
+KEY="${BOLAO_SSH_KEY:-/Users/danylo-oliveira/.ssh/bolao-rl-key.pem}"
 SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $KEY"
 PROJECT_DIR="/Users/danylo-oliveira/Documents/projetos/bolao-rl"
+
+if [ ! -f "$PROJECT_DIR/server/.env" ]; then
+  echo "❌ server/.env não encontrado. Crie a partir de server/.env.example."
+  exit 1
+fi
 
 echo "📦 Building client..."
 cd "$PROJECT_DIR/client"
@@ -14,18 +21,21 @@ npm run build
 
 echo "📁 Creating deploy package..."
 cd "$PROJECT_DIR"
-# Create a tarball excluding node_modules, .git, etc
 tar czf /tmp/bolao-rl-deploy.tar.gz \
   --exclude='node_modules' \
   --exclude='.git' \
   --exclude='client/node_modules' \
   --exclude='server/node_modules' \
+  --exclude='server/.env' \
   --exclude='aws-userdata.sh' \
   --exclude='.claude' \
   .
 
 echo "🚀 Uploading to EC2..."
 scp $SSH_OPTS /tmp/bolao-rl-deploy.tar.gz ec2-user@${EC2_IP}:/tmp/
+
+echo "🔐 Uploading env (server/.env local, fora do git)..."
+scp $SSH_OPTS "$PROJECT_DIR/server/.env" ec2-user@${EC2_IP}:/tmp/bolao.env
 
 echo "⚙️  Setting up on EC2..."
 ssh $SSH_OPTS ec2-user@${EC2_IP} << 'REMOTEOF'
@@ -41,15 +51,10 @@ cd /home/bolao/app
 sudo -u bolao npm install --production
 cd server && sudo -u bolao npm install --production && cd ..
 
-# Setup production .env
-sudo tee /home/bolao/app/server/.env > /dev/null << 'ENVEOF'
-DATABASE_URL=postgresql://bolao_admin:Albnrfc96p7J5sJtqxTMQBCir67e@bolao-rl-db.c29mkas48exm.us-east-1.rds.amazonaws.com:5432/bolao_rl
-ADMIN_KEY=rl2026
-PORT=4010
-API_FOOTBALL_KEY=3853a4152a565651480ca245e1dade4d
-CRON_SECRET=bolao-rl-cron-secret-2026
-ENVEOF
+# .env vem do arquivo enviado por SCP (nunca do repositório)
+sudo mv /tmp/bolao.env /home/bolao/app/server/.env
 sudo chown bolao:bolao /home/bolao/app/server/.env
+sudo chmod 600 /home/bolao/app/server/.env
 
 # Start/restart the service
 sudo systemctl restart bolao-rl
