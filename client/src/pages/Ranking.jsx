@@ -112,17 +112,18 @@ function Select({ icon: Icon, value, onChange, children }) {
 }
 
 const PODIUM_STYLE = [
-  { grad: 'from-amber-300 to-yellow-500', ring: 'ring-amber-300/50', h: 'h-28', icon: Crown, order: 'order-2' },
-  { grad: 'from-slate-200 to-slate-400', ring: 'ring-slate-200/40', h: 'h-20', icon: Medal, order: 'order-1' },
-  { grad: 'from-orange-400 to-amber-600', ring: 'ring-orange-400/40', h: 'h-16', icon: Medal, order: 'order-3' },
+  { grad: 'from-amber-300 via-yellow-400 to-amber-500', ring: 'ring-amber-300/60', barGlow: 'shadow-[0_0_30px_rgba(251,191,36,0.5),0_0_60px_rgba(251,191,36,0.2)]', h: 'h-32', icon: Crown, order: 'order-2', badge: 'bg-gradient-to-br from-amber-200 to-yellow-500', badgeText: 'text-amber-950' },
+  { grad: 'from-slate-100 via-slate-300 to-slate-400', ring: 'ring-slate-200/50', barGlow: 'shadow-[0_0_25px_rgba(203,213,225,0.35),0_0_50px_rgba(203,213,225,0.15)]', h: 'h-24', icon: Medal, order: 'order-1', badge: 'bg-gradient-to-br from-slate-100 to-slate-400', badgeText: 'text-slate-900' },
+  { grad: 'from-orange-300 via-orange-400 to-amber-600', ring: 'ring-orange-400/50', barGlow: 'shadow-[0_0_25px_rgba(251,146,60,0.4),0_0_50px_rgba(251,146,60,0.15)]', h: 'h-20', icon: Medal, order: 'order-3', badge: 'bg-gradient-to-br from-orange-300 to-amber-600', badgeText: 'text-orange-950' },
 ];
 
 function Podium({ podium, flagFor, playerId }) {
   return (
-    <div className="mb-8 grid grid-cols-3 items-end gap-3">
+    <div className="mb-8 grid grid-cols-3 items-end gap-2 sm:gap-4">
       {podium.map((r, i) => {
         const s = PODIUM_STYLE[i];
         const Icon = s.icon;
+        const me = r.id === playerId;
         return (
           <motion.div
             key={r.id}
@@ -131,17 +132,38 @@ function Podium({ podium, flagFor, playerId }) {
             transition={{ delay: i * 0.12, type: 'spring', stiffness: 120 }}
             className={`flex flex-col items-center ${s.order}`}
           >
-            <div className={`relative mb-2 grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br ${s.grad} text-night shadow-lg ring-4 ${s.ring}`}>
-              <span className="font-display text-2xl font-extrabold">{i + 1}</span>
-              <Icon size={18} className="absolute -top-2 -right-1 text-white drop-shadow" />
+            {/* Badge com número */}
+            <div className={`relative mb-2 grid h-14 w-14 place-items-center rounded-full ${s.badge} shadow-lg ring-4 ${s.ring} sm:h-16 sm:w-16`}>
+              <span className={`font-display text-2xl font-extrabold ${s.badgeText}`}>{i + 1}</span>
+              <Icon size={18} className="absolute -right-1 -top-2 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]" />
             </div>
-            <div className="max-w-full truncate text-center text-sm font-bold">
-              {r.id === playerId ? 'Você' : r.nome.replace('(DEMO) ', '')}
+
+            {/* Card com nome, célula, pontos e cravadas */}
+            <div className={`mb-2 w-full rounded-xl px-2 py-2 text-center ring-1 backdrop-blur-md ${me ? 'bg-amber-400/20 ring-amber-400/40' : 'bg-black/70 ring-white/15'}`}>
+              <div className="truncate text-sm font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                {me ? 'Você' : r.nome.replace('(DEMO) ', '')}
+              </div>
+              <div className="truncate text-[11px] text-slate-300">
+                {flagFor(r.selecao)} {r.celula || 'sem célula'}
+              </div>
+              <div className="mt-1 flex items-center justify-center gap-2">
+                <span className="font-display text-lg font-extrabold leading-none text-amber-300 drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] sm:text-xl">
+                  {r.points}<span className="ml-0.5 text-[10px] font-bold text-amber-200/90">pts</span>
+                </span>
+                <span className="text-[10px] text-slate-400">•</span>
+                <span className="text-[11px] font-medium text-emerald-400">
+                  {r.exacts} cravada{r.exacts === 1 ? '' : 's'}
+                </span>
+              </div>
             </div>
-            <div className="mb-2 text-faint">
-              {flagFor(r.selecao)} {r.points} pts
+
+            {/* Barra do pódio — mais vibrante com glow */}
+            <div className={`flex w-full ${s.h} items-start justify-center rounded-t-2xl bg-gradient-to-t ${s.grad} pt-3 ${s.barGlow}`}>
+              <span className="font-display text-3xl font-extrabold leading-none text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)] sm:text-4xl">
+                {r.points}
+                <span className="ml-0.5 text-xs font-bold text-white/80">pts</span>
+              </span>
             </div>
-            <div className={`w-full rounded-t-2xl bg-gradient-to-t ${s.grad} ${s.h} opacity-80`} />
           </motion.div>
         );
       })}
@@ -171,11 +193,14 @@ function Row({ r, flag, me, index }) {
           {flag} {r.celula || 'sem célula'}
         </div>
       </div>
-      <div className="text-right">
-        <div className="font-display text-lg font-extrabold tabular-nums text-amber-200">
+      <div className="flex shrink-0 flex-col items-end">
+        <span className="font-display text-xl font-extrabold leading-none tabular-nums text-amber-300">
           {r.points}
-        </div>
-        <div className="text-faint">{r.exacts} cravadas</div>
+          <span className="ml-0.5 text-xs font-bold text-amber-200/80">pts</span>
+        </span>
+        <span className="mt-0.5 text-[11px] text-slate-300">
+          {r.exacts} cravada{r.exacts === 1 ? '' : 's'}
+        </span>
       </div>
     </motion.div>
   );
