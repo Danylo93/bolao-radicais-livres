@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
@@ -16,8 +16,12 @@ import {
   ArrowRight,
   Heart,
   Clock,
+  Crown,
+  Medal,
+  TrendingUp,
 } from 'lucide-react';
 import { useStore } from '../store';
+import { api } from '../api';
 import { Reveal, Counter } from '../components/ui';
 import { TeamBadge } from '../components/match';
 import { fmtDate } from '../utils';
@@ -37,6 +41,16 @@ export default function Home() {
   const { state, player } = useStore();
   const { tournament, rules, stats, activities } = state;
   const [copied, setCopied] = useState(false);
+  const [ranking, setRanking] = useState(null);
+
+  useEffect(() => {
+    if (player) {
+      api.ranking().then(({ ranking }) => setRanking(ranking)).catch(() => {});
+    }
+  }, [player]);
+
+  const myRank = ranking?.find((r) => r.id === player?.id);
+  const myPos = myRank?.pos;
 
   const copy = async () => {
     try {
@@ -120,31 +134,35 @@ export default function Home() {
           </motion.div>
         </div>
 
-        {/* QR CARD */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.92 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.15, type: 'spring', stiffness: 120 }}
-          className="card relative mx-auto w-full max-w-sm overflow-hidden border-amber-400/20 p-6 text-center shadow-gold"
-        >
-          <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-amber-400/15 blur-2xl" />
-          <div className="mb-3 flex items-center justify-center gap-2 text-sm font-semibold text-amber-200">
-            <QrCode size={16} /> Escaneie e participe
-          </div>
-          <div className="mx-auto w-fit rounded-3xl bg-white p-4 shadow-xl ring-2 ring-amber-400/30">
-            <QRCodeSVG value={SHARE_URL} size={184} bgColor="#ffffff" fgColor="#041208" level="M" />
-          </div>
-          <p className="mt-4 break-all text-faint">{SHARE_URL}</p>
-          <div className="mt-4 flex gap-2">
-            <button onClick={copy} className="btn-ghost flex-1 py-2.5 text-sm">
-              {copied ? <Check size={16} className="text-amber-300" /> : <Copy size={16} />}
-              {copied ? 'Copiado!' : 'Copiar link'}
-            </button>
-            <button onClick={share} className="btn-primary flex-1 py-2.5 text-sm">
-              <Share2 size={16} /> Compartilhar
-            </button>
-          </div>
-        </motion.div>
+        {/* QR CARD (visitante) ou RANKING CARD (logado) */}
+        {player && myRank ? (
+          <MyRankCard myRank={myRank} ranking={ranking} />
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.15, type: 'spring', stiffness: 120 }}
+            className="card relative mx-auto w-full max-w-sm overflow-hidden border-amber-400/20 p-6 text-center shadow-gold"
+          >
+            <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-amber-400/15 blur-2xl" />
+            <div className="mb-3 flex items-center justify-center gap-2 text-sm font-semibold text-amber-200">
+              <QrCode size={16} /> Escaneie e participe
+            </div>
+            <div className="mx-auto w-fit rounded-3xl bg-white p-4 shadow-xl ring-2 ring-amber-400/30">
+              <QRCodeSVG value={SHARE_URL} size={184} bgColor="#ffffff" fgColor="#041208" level="M" />
+            </div>
+            <p className="mt-4 break-all text-faint">{SHARE_URL}</p>
+            <div className="mt-4 flex gap-2">
+              <button onClick={copy} className="btn-ghost flex-1 py-2.5 text-sm">
+                {copied ? <Check size={16} className="text-amber-300" /> : <Copy size={16} />}
+                {copied ? 'Copiado!' : 'Copiar link'}
+              </button>
+              <button onClick={share} className="btn-primary flex-1 py-2.5 text-sm">
+                <Share2 size={16} /> Compartilhar
+              </button>
+            </div>
+          </motion.div>
+        )}
       </section>
 
       {/* PRÊMIOS */}
@@ -291,11 +309,16 @@ export default function Home() {
       <Reveal>
         <div className="card flex flex-col items-center gap-4 p-8 text-center sm:p-10">
           <h2 className="font-display text-3xl font-extrabold uppercase tracking-wide text-white text-shadow-sm sm:text-4xl">
-            Bora pro jogo? <span className="text-gradient">Cadastre-se agora</span>
+            {player ? (
+              <>Bora subir no <span className="text-gradient">ranking</span>?</>
+            ) : (
+              <>Bora pro jogo? <span className="text-gradient">Cadastre-se agora</span></>
+            )}
           </h2>
           <p className="max-w-md text-muted">
-            Leva menos de 1 minuto. Chama a galera da sua célula e venham com tudo pra cima do topo do
-            ranking!
+            {player
+              ? 'Não esquece de dar seus palpites nos próximos jogos. Cada acerto conta!'
+              : 'Leva menos de 1 minuto. Chama a galera da sua célula e venham com tudo pra cima do topo do ranking!'}
           </p>
           <Link to={player ? '/palpites' : '/cadastro'} className="btn-primary text-base">
             {player ? 'Ir para meus palpites' : 'Participar do Bolão RL'} <ArrowRight size={18} />
@@ -387,5 +410,93 @@ function ScoreRow({ pts, title, desc, tone }) {
         <div className="text-muted">{desc}</div>
       </div>
     </div>
+  );
+}
+
+function MyRankCard({ myRank, ranking }) {
+  // Pegar vizinhos no ranking (1 acima e 1 abaixo)
+  const myIdx = ranking.findIndex((r) => r.id === myRank.id);
+  const neighbors = [];
+  if (myIdx > 0) neighbors.push(ranking[myIdx - 1]);
+  neighbors.push(myRank);
+  if (myIdx < ranking.length - 1) neighbors.push(ranking[myIdx + 1]);
+
+  const posIcon = myRank.pos === 1 ? Crown : myRank.pos <= 3 ? Medal : TrendingUp;
+  const PosIcon = posIcon;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.92 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: 0.15, type: 'spring', stiffness: 120 }}
+      className="card relative mx-auto w-full max-w-sm overflow-hidden border-amber-400/20 p-6 shadow-gold"
+    >
+      <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-amber-400/15 blur-2xl" />
+      <div className="absolute -left-8 -bottom-8 h-24 w-24 rounded-full bg-emerald-400/10 blur-2xl" />
+
+      {/* Header */}
+      <div className="mb-4 flex items-center justify-center gap-2 text-sm font-semibold text-amber-200">
+        <Trophy size={16} /> Sua posição no ranking
+      </div>
+
+      {/* Posição grande */}
+      <div className="mb-4 flex flex-col items-center">
+        <div className="relative grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 shadow-lg ring-4 ring-amber-300/50">
+          <span className="font-display text-4xl font-extrabold text-amber-950">{myRank.pos}º</span>
+          <PosIcon size={20} className="absolute -right-1 -top-1 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]" />
+        </div>
+        <div className="mt-3 text-center">
+          <div className="font-display text-lg font-bold text-white">{myRank.nome}</div>
+          <div className="text-sm text-[var(--text-secondary)]">{myRank.celula || 'sem célula'}</div>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="mb-4 grid grid-cols-3 gap-2">
+        <div className="rounded-xl border border-white/10 bg-black/40 p-2.5 text-center">
+          <div className="font-display text-xl font-extrabold text-amber-300">{myRank.points}</div>
+          <div className="text-[10px] font-semibold uppercase text-slate-400">Pontos</div>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-black/40 p-2.5 text-center">
+          <div className="font-display text-xl font-extrabold text-emerald-400">{myRank.exacts}</div>
+          <div className="text-[10px] font-semibold uppercase text-slate-400">Cravadas</div>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-black/40 p-2.5 text-center">
+          <div className="font-display text-xl font-extrabold text-cyan-400">{myRank.hits}</div>
+          <div className="text-[10px] font-semibold uppercase text-slate-400">Acertos</div>
+        </div>
+      </div>
+
+      {/* Mini ranking com vizinhos */}
+      <div className="space-y-1.5">
+        {neighbors.map((r) => {
+          const isMe = r.id === myRank.id;
+          return (
+            <div
+              key={r.id}
+              className={`flex items-center gap-2.5 rounded-xl px-3 py-2 transition-all ${
+                isMe
+                  ? 'border border-amber-400/40 bg-amber-400/15 shadow-[0_0_15px_rgba(251,191,36,0.15)]'
+                  : 'border border-white/5 bg-black/30'
+              }`}
+            >
+              <span className={`font-display text-sm font-bold tabular-nums ${isMe ? 'text-amber-300' : 'text-slate-500'}`}>
+                {r.pos}º
+              </span>
+              <span className={`flex-1 truncate text-sm font-medium ${isMe ? 'text-white' : 'text-slate-400'}`}>
+                {isMe ? 'Você' : r.nome.replace('(DEMO) ', '')}
+              </span>
+              <span className={`font-display text-sm font-bold tabular-nums ${isMe ? 'text-amber-300' : 'text-slate-500'}`}>
+                {r.points} pts
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      <Link to="/ranking" className="btn-ghost mt-4 w-full justify-center py-2.5 text-sm">
+        <Trophy size={14} className="text-amber-300" /> Ver ranking completo
+      </Link>
+    </motion.div>
   );
 }
