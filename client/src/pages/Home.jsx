@@ -19,12 +19,16 @@ import {
   Crown,
   Medal,
   TrendingUp,
+  AlertTriangle,
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useStore } from '../store';
 import { api } from '../api';
 import { Reveal, Counter } from '../components/ui';
 import { TeamBadge } from '../components/match';
-import { fmtDate } from '../utils';
+import { fmtDate, hasBet } from '../utils';
 
 const BASE_URL = (import.meta.env.VITE_PUBLIC_URL || window.location.origin).replace(/\/$/, '');
 // O QR Code e o link de divulgação levam direto para a tela de cadastro.
@@ -42,15 +46,26 @@ export default function Home() {
   const { tournament, rules, stats, activities } = state;
   const [copied, setCopied] = useState(false);
   const [ranking, setRanking] = useState(null);
+  const [myBets, setMyBets] = useState(null);
 
   useEffect(() => {
     if (player) {
       api.ranking().then(({ ranking }) => setRanking(ranking)).catch(() => {});
+      api.user(player.id).then(({ bets }) => setMyBets(bets)).catch(() => {});
     }
   }, [player]);
 
   const myRank = ranking?.find((r) => r.id === player?.id);
   const myPos = myRank?.pos;
+
+  // Jogos de hoje ou nas próximas 12h que ainda estão abertos
+  const upcomingMatches = (state.matches || []).filter((m) => {
+    if (!m.home || !m.away || m.finished) return false;
+    const matchTime = new Date(m.date).getTime();
+    const now = Date.now();
+    const hoursUntil = (matchTime - now) / (1000 * 60 * 60);
+    return hoursUntil > -0.5 && hoursUntil <= 12; // até 12h no futuro, ou começou há menos de 30min
+  }).sort((a, b) => new Date(a.date) - new Date(b.date));
 
   const copy = async () => {
     try {
@@ -164,6 +179,11 @@ export default function Home() {
           </motion.div>
         )}
       </section>
+
+      {/* BANNER DE JOGOS PRÓXIMOS */}
+      {upcomingMatches.length > 0 && (
+        <UpcomingMatchesBanner matches={upcomingMatches} bets={myBets} player={player} />
+      )}
 
       {/* PRÊMIOS */}
       <Reveal>
@@ -497,6 +517,168 @@ function MyRankCard({ myRank, ranking }) {
       <Link to="/ranking" className="btn-ghost mt-4 w-full justify-center py-2.5 text-sm">
         <Trophy size={14} className="text-amber-300" /> Ver ranking completo
       </Link>
+    </motion.div>
+  );
+}
+
+function UpcomingMatchesBanner({ matches, bets, player }) {
+  const [current, setCurrent] = useState(0);
+
+  // Auto-rotate a cada 5 segundos
+  useEffect(() => {
+    if (matches.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrent((c) => (c + 1) % matches.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [matches.length]);
+
+  const prev = () => setCurrent((c) => (c - 1 + matches.length) % matches.length);
+  const next = () => setCurrent((c) => (c + 1) % matches.length);
+
+  const m = matches[current];
+  if (!m) return null;
+
+  const bet = bets?.[m.id];
+  const betted = hasBet(bet);
+  const matchTime = new Date(m.date);
+  const hh = String(matchTime.getHours()).padStart(2, '0');
+  const mi = String(matchTime.getMinutes()).padStart(2, '0');
+  const timeStr = `${hh}:${mi}`;
+
+  const isToday = (() => {
+    const now = new Date();
+    return matchTime.getDate() === now.getDate() &&
+      matchTime.getMonth() === now.getMonth() &&
+      matchTime.getFullYear() === now.getFullYear();
+  })();
+
+  const timeLabel = isToday ? `Hoje às ${timeStr}` : fmtDate(m.date);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative"
+    >
+      <div
+        className={`relative overflow-hidden rounded-2xl border p-4 transition-all duration-500 ${
+          player && !betted
+            ? 'border-red-500/40 bg-gradient-to-r from-red-950/80 via-red-900/60 to-red-950/80 shadow-[0_0_30px_rgba(239,68,68,0.2)]'
+            : player && betted
+              ? 'border-emerald-500/30 bg-gradient-to-r from-emerald-950/70 via-emerald-900/50 to-emerald-950/70 shadow-[0_0_20px_rgba(16,185,129,0.15)]'
+              : 'border-amber-400/30 bg-gradient-to-r from-amber-950/60 via-amber-900/40 to-amber-950/60 shadow-gold'
+        }`}
+      >
+        {/* Animated shimmer */}
+        <div className="absolute inset-0 -z-10">
+          <div
+            className={`h-full w-1/3 animate-shimmer ${
+              player && !betted
+                ? 'bg-gradient-to-r from-transparent via-red-500/10 to-transparent'
+                : player && betted
+                  ? 'bg-gradient-to-r from-transparent via-emerald-500/8 to-transparent'
+                  : 'bg-gradient-to-r from-transparent via-amber-500/10 to-transparent'
+            }`}
+            style={{ transform: 'translateX(-100%)' }}
+          />
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Ícone */}
+          <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${
+            player && !betted
+              ? 'bg-red-500/20 text-red-400'
+              : player && betted
+                ? 'bg-emerald-500/20 text-emerald-400'
+                : 'bg-amber-500/20 text-amber-400'
+          }`}>
+            {player && !betted ? (
+              <AlertTriangle size={20} />
+            ) : player && betted ? (
+              <CheckCircle size={20} />
+            ) : (
+              <CalendarClock size={20} />
+            )}
+          </div>
+
+          {/* Conteúdo */}
+          <div className="min-w-0 flex-1">
+            {/* Tag de tempo */}
+            <div className="flex items-center gap-2">
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                player && !betted
+                  ? 'bg-red-500/25 text-red-300'
+                  : player && betted
+                    ? 'bg-emerald-500/20 text-emerald-300'
+                    : 'bg-amber-500/20 text-amber-300'
+              }`}>
+                <Clock size={10} /> {timeLabel}
+              </span>
+              {isToday && (
+                <span className="live-dot inline-block h-2 w-2 rounded-full bg-red-400" />
+              )}
+            </div>
+
+            {/* Times */}
+            <div className="mt-1.5 flex items-center gap-2 text-sm font-semibold text-white">
+              <span className="truncate">{m.home?.flag} {m.home?.name}</span>
+              <span className="text-[var(--text-faint)]">×</span>
+              <span className="truncate">{m.away?.name} {m.away?.flag}</span>
+            </div>
+
+            {/* Mensagem / Palpite */}
+            <div className="mt-1">
+              {!player ? (
+                <span className="text-xs text-amber-200/80">
+                  Cadastre-se e dê seu palpite! ⚽
+                </span>
+              ) : !betted ? (
+                <Link to="/palpites" className="group inline-flex items-center gap-1 text-xs font-semibold text-red-300 hover:text-red-200">
+                  ⚠️ Você ainda não palpitou! Clique aqui <ArrowRight size={12} className="transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-xs text-emerald-300/90">
+                  Seu palpite: <span className="font-display font-bold text-white">{bet.home}</span>
+                  <span className="text-emerald-500/60">×</span>
+                  <span className="font-display font-bold text-white">{bet.away}</span>
+                  <span className="text-emerald-400">✓</span>
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Navegação */}
+          {matches.length > 1 && (
+            <div className="flex shrink-0 flex-col items-center gap-1">
+              <button onClick={prev} className="rounded-lg p-1 text-white/40 transition hover:bg-white/10 hover:text-white">
+                <ChevronLeft size={16} />
+              </button>
+              <span className="text-[10px] tabular-nums text-white/30">{current + 1}/{matches.length}</span>
+              <button onClick={next} className="rounded-lg p-1 text-white/40 transition hover:bg-white/10 hover:text-white">
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Dots de navegação */}
+        {matches.length > 1 && (
+          <div className="mt-2 flex justify-center gap-1.5">
+            {matches.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrent(i)}
+                className={`h-1.5 rounded-full transition-all ${
+                  i === current
+                    ? `w-4 ${player && !hasBet(bets?.[matches[i].id]) ? 'bg-red-400' : player ? 'bg-emerald-400' : 'bg-amber-400'}`
+                    : 'w-1.5 bg-white/20 hover:bg-white/40'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 }
