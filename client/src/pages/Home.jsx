@@ -58,13 +58,13 @@ export default function Home() {
   const myRank = ranking?.find((r) => r.id === player?.id);
   const myPos = myRank?.pos;
 
-  // Jogos de hoje ou nas próximas 12h que ainda estão abertos
+  // Jogos próximos (até 12h no futuro) ou em andamento (até 2.5h após início)
   const upcomingMatches = (state.matches || []).filter((m) => {
     if (!m.home || !m.away || m.finished) return false;
     const matchTime = new Date(m.date).getTime();
     const now = Date.now();
     const hoursUntil = (matchTime - now) / (1000 * 60 * 60);
-    return hoursUntil > -0.5 && hoursUntil <= 12; // até 12h no futuro, ou começou há menos de 30min
+    return hoursUntil > -2.5 && hoursUntil <= 12;
   }).sort((a, b) => new Date(a.date) - new Date(b.date));
 
   const copy = async () => {
@@ -542,18 +542,40 @@ function UpcomingMatchesBanner({ matches, bets, player }) {
   const bet = bets?.[m.id];
   const betted = hasBet(bet);
   const matchTime = new Date(m.date);
+  const now = Date.now();
+  const isLive = matchTime.getTime() <= now && !m.finished;
   const hh = String(matchTime.getHours()).padStart(2, '0');
   const mi = String(matchTime.getMinutes()).padStart(2, '0');
   const timeStr = `${hh}:${mi}`;
 
   const isToday = (() => {
-    const now = new Date();
-    return matchTime.getDate() === now.getDate() &&
-      matchTime.getMonth() === now.getMonth() &&
-      matchTime.getFullYear() === now.getFullYear();
+    const today = new Date();
+    return matchTime.getDate() === today.getDate() &&
+      matchTime.getMonth() === today.getMonth() &&
+      matchTime.getFullYear() === today.getFullYear();
   })();
 
-  const timeLabel = isToday ? `Hoje às ${timeStr}` : fmtDate(m.date);
+  const timeLabel = isLive ? 'Ao vivo' : isToday ? `Hoje às ${timeStr}` : fmtDate(m.date);
+
+  // Determinar estado visual
+  // live+bet = laranja/fogo, live+noBet = vermelho escuro, pre+noBet = vermelho, pre+bet = verde, visitante = amber
+  const getState = () => {
+    if (!player) return 'visitor';
+    if (isLive && betted) return 'live-bet';
+    if (isLive && !betted) return 'live-missed';
+    if (betted) return 'pre-bet';
+    return 'pre-nobet';
+  };
+  const bannerState = getState();
+
+  const styles = {
+    'visitor':     { border: 'border-amber-400/30', bg: 'bg-gradient-to-r from-amber-950/60 via-amber-900/40 to-amber-950/60', shadow: 'shadow-gold', shimmer: 'via-amber-500/10', icon: 'bg-amber-500/20 text-amber-400', tag: 'bg-amber-500/20 text-amber-300', dot: 'bg-amber-400' },
+    'pre-nobet':   { border: 'border-red-500/40', bg: 'bg-gradient-to-r from-red-950/80 via-red-900/60 to-red-950/80', shadow: 'shadow-[0_0_30px_rgba(239,68,68,0.2)]', shimmer: 'via-red-500/10', icon: 'bg-red-500/20 text-red-400', tag: 'bg-red-500/25 text-red-300', dot: 'bg-red-400' },
+    'pre-bet':     { border: 'border-emerald-500/30', bg: 'bg-gradient-to-r from-emerald-950/70 via-emerald-900/50 to-emerald-950/70', shadow: 'shadow-[0_0_20px_rgba(16,185,129,0.15)]', shimmer: 'via-emerald-500/8', icon: 'bg-emerald-500/20 text-emerald-400', tag: 'bg-emerald-500/20 text-emerald-300', dot: 'bg-emerald-400' },
+    'live-bet':    { border: 'border-orange-500/50', bg: 'bg-gradient-to-r from-orange-950/80 via-red-900/60 to-orange-950/80', shadow: 'shadow-[0_0_35px_rgba(249,115,22,0.3)]', shimmer: 'via-orange-500/15', icon: 'bg-orange-500/25 text-orange-400', tag: 'bg-orange-500/30 text-orange-200', dot: 'bg-orange-400' },
+    'live-missed': { border: 'border-red-700/50', bg: 'bg-gradient-to-r from-red-950/90 via-red-900/70 to-red-950/90', shadow: 'shadow-[0_0_30px_rgba(185,28,28,0.25)]', shimmer: 'via-red-600/12', icon: 'bg-red-600/25 text-red-500', tag: 'bg-red-600/30 text-red-300', dot: 'bg-red-500' },
+  };
+  const s = styles[bannerState];
 
   return (
     <motion.div
@@ -562,40 +584,24 @@ function UpcomingMatchesBanner({ matches, bets, player }) {
       className="relative"
     >
       <div
-        className={`relative overflow-hidden rounded-2xl border p-4 transition-all duration-500 ${
-          player && !betted
-            ? 'border-red-500/40 bg-gradient-to-r from-red-950/80 via-red-900/60 to-red-950/80 shadow-[0_0_30px_rgba(239,68,68,0.2)]'
-            : player && betted
-              ? 'border-emerald-500/30 bg-gradient-to-r from-emerald-950/70 via-emerald-900/50 to-emerald-950/70 shadow-[0_0_20px_rgba(16,185,129,0.15)]'
-              : 'border-amber-400/30 bg-gradient-to-r from-amber-950/60 via-amber-900/40 to-amber-950/60 shadow-gold'
-        }`}
+        className={`relative overflow-hidden rounded-2xl border p-4 transition-all duration-500 ${s.border} ${s.bg} ${s.shadow}`}
       >
         {/* Animated shimmer */}
         <div className="absolute inset-0 -z-10">
           <div
-            className={`h-full w-1/3 animate-shimmer ${
-              player && !betted
-                ? 'bg-gradient-to-r from-transparent via-red-500/10 to-transparent'
-                : player && betted
-                  ? 'bg-gradient-to-r from-transparent via-emerald-500/8 to-transparent'
-                  : 'bg-gradient-to-r from-transparent via-amber-500/10 to-transparent'
-            }`}
+            className={`h-full w-1/3 animate-shimmer bg-gradient-to-r from-transparent ${s.shimmer} to-transparent`}
             style={{ transform: 'translateX(-100%)' }}
           />
         </div>
 
         <div className="flex items-center gap-3">
           {/* Ícone */}
-          <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${
-            player && !betted
-              ? 'bg-red-500/20 text-red-400'
-              : player && betted
-                ? 'bg-emerald-500/20 text-emerald-400'
-                : 'bg-amber-500/20 text-amber-400'
-          }`}>
-            {player && !betted ? (
+          <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${s.icon}`}>
+            {isLive ? (
+              <span className="text-lg">⚽</span>
+            ) : bannerState === 'pre-nobet' ? (
               <AlertTriangle size={20} />
-            ) : player && betted ? (
+            ) : bannerState === 'pre-bet' ? (
               <CheckCircle size={20} />
             ) : (
               <CalendarClock size={20} />
@@ -606,16 +612,14 @@ function UpcomingMatchesBanner({ matches, bets, player }) {
           <div className="min-w-0 flex-1">
             {/* Tag de tempo */}
             <div className="flex items-center gap-2">
-              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                player && !betted
-                  ? 'bg-red-500/25 text-red-300'
-                  : player && betted
-                    ? 'bg-emerald-500/20 text-emerald-300'
-                    : 'bg-amber-500/20 text-amber-300'
-              }`}>
-                <Clock size={10} /> {timeLabel}
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${s.tag}`}>
+                {isLive ? (
+                  <><span className="live-dot inline-block h-1.5 w-1.5 rounded-full bg-current" /> {timeLabel}</>
+                ) : (
+                  <><Clock size={10} /> {timeLabel}</>
+                )}
               </span>
-              {isToday && (
+              {isToday && !isLive && (
                 <span className="live-dot inline-block h-2 w-2 rounded-full bg-red-400" />
               )}
             </div>
@@ -629,20 +633,36 @@ function UpcomingMatchesBanner({ matches, bets, player }) {
 
             {/* Mensagem / Palpite */}
             <div className="mt-1">
-              {!player ? (
+              {bannerState === 'visitor' && (
                 <span className="text-xs text-amber-200/80">
                   Cadastre-se e dê seu palpite! ⚽
                 </span>
-              ) : !betted ? (
+              )}
+              {bannerState === 'pre-nobet' && (
                 <Link to="/palpites" className="group inline-flex items-center gap-1 text-xs font-semibold text-red-300 hover:text-red-200">
                   ⚠️ Você ainda não palpitou! Clique aqui <ArrowRight size={12} className="transition-transform group-hover:translate-x-0.5" />
                 </Link>
-              ) : (
+              )}
+              {bannerState === 'pre-bet' && (
                 <span className="inline-flex items-center gap-1.5 text-xs text-emerald-300/90">
                   Seu palpite: <span className="font-display font-bold text-white">{bet.home}</span>
                   <span className="text-emerald-500/60">×</span>
                   <span className="font-display font-bold text-white">{bet.away}</span>
                   <span className="text-emerald-400">✓</span>
+                </span>
+              )}
+              {bannerState === 'live-bet' && (
+                <span className="inline-flex items-center gap-1.5 text-xs">
+                  <span className="font-semibold text-orange-300">Bola rolando! 🔥</span>
+                  <span className="text-orange-200/70">Seu palpite:</span>
+                  <span className="font-display font-bold text-white">{bet.home}</span>
+                  <span className="text-orange-400/60">×</span>
+                  <span className="font-display font-bold text-white">{bet.away}</span>
+                </span>
+              )}
+              {bannerState === 'live-missed' && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-400">
+                  😤 Perdeu a vez! Você não palpitou nesse jogo.
                 </span>
               )}
             </div>
@@ -665,17 +685,25 @@ function UpcomingMatchesBanner({ matches, bets, player }) {
         {/* Dots de navegação */}
         {matches.length > 1 && (
           <div className="mt-2 flex justify-center gap-1.5">
-            {matches.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrent(i)}
-                className={`h-1.5 rounded-full transition-all ${
-                  i === current
-                    ? `w-4 ${player && !hasBet(bets?.[matches[i].id]) ? 'bg-red-400' : player ? 'bg-emerald-400' : 'bg-amber-400'}`
-                    : 'w-1.5 bg-white/20 hover:bg-white/40'
-                }`}
-              />
-            ))}
+            {matches.map((_, i) => {
+              const mI = matches[i];
+              const mILive = new Date(mI.date).getTime() <= Date.now() && !mI.finished;
+              const mIBet = hasBet(bets?.[mI.id]);
+              let dotColor = 'bg-amber-400';
+              if (player && mILive && mIBet) dotColor = 'bg-orange-400';
+              else if (player && mILive && !mIBet) dotColor = 'bg-red-500';
+              else if (player && !mIBet) dotColor = 'bg-red-400';
+              else if (player && mIBet) dotColor = 'bg-emerald-400';
+              return (
+                <button
+                  key={i}
+                  onClick={() => setCurrent(i)}
+                  className={`h-1.5 rounded-full transition-all ${
+                    i === current ? `w-4 ${dotColor}` : 'w-1.5 bg-white/20 hover:bg-white/40'
+                  }`}
+                />
+              );
+            })}
           </div>
         )}
       </div>
