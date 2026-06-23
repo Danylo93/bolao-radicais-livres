@@ -75,11 +75,15 @@ export async function init() {
   await pool.query(`ALTER TABLE users ALTER COLUMN telefone DROP NOT NULL;`);
   await pool.query(`ALTER TABLE users ALTER COLUMN telefone SET DEFAULT '';`);
   await pool.query(`DROP INDEX IF EXISTS users_phone_digits;`);
-  // Login por e-mail (sem senha): e-mail único, ignorando maiúsculas/minúsculas.
+  // E-mail é opcional (login é por telefone): único SÓ quando preenchido
+  // (índice parcial) — evita colisão entre vários cadastros sem e-mail.
+  await pool.query(`DROP INDEX IF EXISTS users_email_lower;`);
   await pool.query(`
     CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower
-    ON users ((lower(email)));
+    ON users ((lower(email))) WHERE email IS NOT NULL AND email <> '';
   `);
+  // Conserta cadastros antigos que gravaram e-mail vazio/"undefined".
+  await pool.query(`UPDATE users SET email = NULL WHERE email = '' OR lower(email) = 'undefined';`);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS bets (
@@ -217,7 +221,7 @@ export async function addUser({ nome, celula, selecao, email, telefone }) {
       String(nome).trim(),
       String(celula || '').trim(),
       String(selecao || '').trim(),
-      String(email).trim().toLowerCase(),
+      email && String(email).trim() ? String(email).trim().toLowerCase() : null,
       String(telefone || '').trim(),
     ]
   );
