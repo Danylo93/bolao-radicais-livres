@@ -125,7 +125,7 @@ export default function Home() {
             transition={{ delay: 0.12 }}
             className="mt-5 max-w-md text-body"
           >
-            O bolão oficial da <b className="text-white">RL São Miguel</b> pra Copa 2026. Dê seus
+            O bolão oficial dos <b className="text-white">Radicais Livres de São Miguel</b> pra Copa 2026. Dê seus
             palpites nos jogos, viva essa comunhão com a galera e concorra à inscrição do Amor que Pensa! Bora pra cima! 🔥🙌
           </motion.p>
 
