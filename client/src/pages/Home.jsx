@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../store';
 import { api } from '../api';
-import { Reveal, Counter } from '../components/ui';
+import { Reveal, Counter, HandIcon } from '../components/ui';
 import { TeamBadge } from '../components/match';
 import { fmtDate, hasBet } from '../utils';
 
@@ -115,7 +115,7 @@ export default function Home() {
             <span className="text-gradient">BOLÃO RL</span>
             <span className="mt-1 block text-copa text-4xl font-extrabold sm:text-6xl">São Miguel</span>
             <span className="mt-3 block text-xl font-semibold text-[var(--text-secondary)] text-shadow-sm sm:text-2xl">
-              Palpite. Cravar. Brilhar. 🏆
+              Palpite. Cravar. Brilhar. <HandIcon size={18} className="inline-block align-text-bottom text-amber-200" />
             </span>
           </motion.h1>
 
@@ -125,8 +125,8 @@ export default function Home() {
             transition={{ delay: 0.12 }}
             className="mt-5 max-w-md text-body"
           >
-            O bolão dos jovens da <b className="text-white">RL São Miguel</b> pra Copa 2026. Dê seus
-            palpites em todos os jogos, dispute com a galera e fature o prêmio mais cobiçado do ano. 😏
+            O bolão oficial da <b className="text-white">RL São Miguel</b> pra Copa 2026. Dê seus
+            palpites nos jogos, viva essa comunhão com a galera e concorra à inscrição do Amor que Pensa! Bora pra cima! 🔥🙌
           </motion.p>
 
           <motion.div
@@ -190,7 +190,7 @@ export default function Home() {
         <div className="relative overflow-hidden rounded-3xl border border-amber-400/25 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-emerald-600/10 p-6 shadow-gold sm:p-8">
           <div className="absolute inset-0 -z-10 animate-pulse bg-[radial-gradient(circle_at_50%_0%,rgba(251,191,36,0.15),transparent_60%)]" />
           <span className="chip mx-auto mb-5 flex w-fit border-amber-400/35 bg-amber-400/10 text-amber-100">
-            <Trophy size={14} /> Premiação
+            <HandIcon size={14} className="opacity-80" /> Premiação
           </span>
           <div className="grid gap-3 sm:grid-cols-3">
             {(tournament.prizes || []).map((p, i) => (
@@ -259,7 +259,7 @@ export default function Home() {
             Como <span className="text-gradient">pontuar</span>
           </h2>
           <p className="mx-auto mb-6 max-w-xl text-center text-body">
-            Você soma pontos <b className="text-white">nos jogos</b> e também sendo <b className="text-amber-200">fiel nos cultos e na célula</b>. Tudo entra no ranking! 🏆
+            Você soma pontos <b className="text-white">nos jogos</b> e também sendo <b className="text-amber-200">fiel nos cultos e na célula</b>. Tudo entra no ranking! <HandIcon size={16} className="inline-block align-text-bottom opacity-80" />
           </p>
         </Reveal>
 

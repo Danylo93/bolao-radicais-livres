@@ -39,7 +39,23 @@ export function Background() {
       {/* Brilho dourado suave no topo */}
       <div className="absolute -left-20 -top-32 h-80 w-80 rounded-full bg-amber-400/10 blur-3xl" />
       <div className="absolute -right-16 top-1/4 h-64 w-64 rounded-full bg-emerald-400/8 blur-3xl" />
+
+      {/* Marca d'água da Mãozinha RL */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03]">
+        <img src="/rl-logo-white.png" alt="" className="h-[500px] w-[500px] object-contain drop-shadow-2xl sm:h-[800px] sm:w-[800px]" />
+      </div>
     </div>
+  );
+}
+
+export function HandIcon({ className = '', size = 24 }) {
+  return (
+    <img
+      src="/rl-logo-white.png"
+      alt="Mão RL"
+      style={{ width: size, height: size }}
+      className={`object-contain ${className}`}
+    />
   );
 }
 

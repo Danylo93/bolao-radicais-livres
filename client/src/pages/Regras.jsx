@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ScrollText, Trophy, Target, Clock, Award, Heart, ShieldCheck, Users } from 'lucide-react';
 import { useStore } from '../store';
-import { PageHeader, Reveal } from '../components/ui';
+import { PageHeader, Reveal, HandIcon } from '../components/ui';
 
 const ACTIVITY_DESC = {
   culto: 'Presença no culto de jovens.',
@@ -24,7 +24,7 @@ export default function Regras() {
       <Reveal>
         <div className="mb-6 overflow-hidden rounded-3xl border border-amber-400/25 bg-gradient-to-r from-amber-500/15 to-emerald-600/10 p-6 shadow-gold">
           <div className="mb-4 flex items-center justify-center gap-2 text-amber-200">
-            <Trophy size={20} />
+            <HandIcon size={20} className="opacity-80" />
             <span className="font-display text-lg font-bold uppercase tracking-wide">Premiação</span>
           </div>
           <div className="space-y-2">

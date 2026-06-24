@@ -9,11 +9,11 @@
 
 export const TOURNAMENT = {
   name: 'Bolão RL São Miguel',
-  subtitle: 'Copa RL São Miguel 2026',
+  // subtitle: 'Copa RL São Miguel 2026',
   prizes: [
     { place: '1º Lugar', prize: 'Inscrição do Amor que Pensa', emoji: '💘' },
     { place: '2º Lugar', prize: 'Camiseta RL São Miguel', emoji: '👕' },
-    { place: '3º Lugar', prize: 'Comunhão com os Discipuladores Jovens', emoji: '🤝' },
+    { place: '3º Lugar', prize: 'Comunhão com os Discipuladores de Jovens', emoji: '🤝' },
   ],
   edition: 'Edição São Miguel • Jovens RL',
 };

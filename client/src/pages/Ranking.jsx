@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Trophy, Search, RefreshCw, Users, Flag, Crown, Medal } from 'lucide-react';
 import { useStore } from '../store';
 import { api } from '../api';
-import { PageHeader, Loading, EmptyState } from '../components/ui';
+import { PageHeader, Loading, EmptyState, HandIcon } from '../components/ui';
 
 export default function Ranking() {
   const { state, player } = useStore();
@@ -39,7 +39,7 @@ export default function Ranking() {
 
   return (
     <div>
-      <PageHeader icon={Trophy} title="Ranking geral" subtitle="Quem tá voando rumo ao prêmio? 🏆" />
+      <PageHeader icon={HandIcon} title="Ranking geral" subtitle="Quem tá voando rumo ao prêmio?" />
 
       {/* Filtros */}
       <div className="card mb-6 grid gap-3 p-4 sm:grid-cols-3">

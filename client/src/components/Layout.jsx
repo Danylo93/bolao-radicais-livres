@@ -1,6 +1,7 @@
+import { useState, useRef, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Home, Target, Trophy, ScrollText, User, CheckCircle2, XCircle, Info } from 'lucide-react';
+import { Home, Target, Trophy, ScrollText, User, CheckCircle2, XCircle, Info, Volume2, VolumeX } from 'lucide-react';
 import { useStore } from '../store';
 import { Background } from './ui';
 
@@ -14,9 +15,9 @@ const NAV = [
 function Brand() {
   return (
     <Link to="/" className="group flex items-center gap-2">
-      <span className="grid h-9 w-9 place-items-center rounded-xl border border-amber-400/40 bg-gradient-to-br from-amber-300 to-yellow-500 text-lg shadow-gold transition-transform group-hover:scale-110">
-        🏆
-      </span>
+      <div className="flex h-10 w-10 items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+        <img src="/rl-logo-white.png" alt="Logo RL" className="h-full w-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
+      </div>
       <div className="leading-none">
         <span className="font-display text-lg font-extrabold tracking-tight text-white">BOLÃO RL</span>
         <span className="block text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300/90">
@@ -58,6 +59,66 @@ function Toasts() {
   );
 }
 
+function BackgroundMusic() {
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = 0.4;
+    }
+  }, []);
+
+  const toggle = () => {
+    if (playing) {
+      audioRef.current.pause();
+    } else {
+      if (audioRef.current.currentTime < 11 || audioRef.current.currentTime >= 42) {
+        audioRef.current.currentTime = 11;
+      }
+      audioRef.current.play().catch(() => {
+        // Ignora erros
+      });
+    }
+    setPlaying(!playing);
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current && audioRef.current.currentTime >= 42) {
+      audioRef.current.currentTime = 11;
+      // Garante que continue tocando caso haja algum engasgo no loop
+      audioRef.current.play().catch(() => {});
+    }
+  };
+
+  return (
+    <div className="flex items-center">
+      <audio ref={audioRef} src="/shakira.mp3" onTimeUpdate={handleTimeUpdate} preload="none" />
+      <button
+        onClick={toggle}
+        className={`group relative grid h-9 w-9 place-items-center rounded-xl transition-all ${
+          playing
+            ? 'bg-amber-400/20 text-amber-300 shadow-[inset_0_0_0_1px_rgba(251,191,36,0.3)]'
+            : 'bg-white/5 text-[var(--text-faint)] hover:bg-white/10 hover:text-white'
+        }`}
+        title="Música tema"
+      >
+        {playing ? (
+          <>
+            <Volume2 size={18} className="animate-pulse" />
+            <span className="absolute -bottom-1 -right-1 flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
+            </span>
+          </>
+        ) : (
+          <VolumeX size={18} />
+        )}
+      </button>
+    </div>
+  );
+}
+
 export default function Layout({ children }) {
   const { player } = useStore();
 
@@ -89,6 +150,8 @@ export default function Layout({ children }) {
             ))}
           </nav>
           <div className="flex items-center gap-2">
+            <BackgroundMusic />
+            <div className="h-4 w-px bg-white/10" />
             {player ? (
               <Link to="/palpites" className="chip max-w-[10rem] truncate">
                 <User size={14} className="text-emerald-300" />
