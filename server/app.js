@@ -154,12 +154,16 @@ app.post('/api/admin/login', (req, res) => {
 });
 
 app.get('/api/admin/users', requireAdmin, wrap(async (req, res) => {
-  const [users, activities] = await Promise.all([db.getUsers(), db.getAllActivities()]);
+  const [users, activities, bets] = await Promise.all([db.getUsers(), db.getAllActivities(), db.getAllBets()]);
   const byUser = {};
   for (const a of activities) (byUser[a.user_id] ||= []).push(a);
+  const betsByUser = {};
+  for (const b of bets) (betsByUser[b.user_id] ||= []).push(b);
+
   const withActivities = users.map((u) => {
     const acts = byUser[u.id] || [];
-    return { ...u, activities: acts, bonus: acts.reduce((s, a) => s + a.points, 0) };
+    const bts = betsByUser[u.id] || [];
+    return { ...u, activities: acts, bonus: acts.reduce((s, a) => s + a.points, 0), betsCount: bts.length };
   });
   res.json({ users: withActivities });
 }));

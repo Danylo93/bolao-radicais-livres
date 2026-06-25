@@ -253,6 +253,7 @@ export default function Admin() {
                   adminKey={key}
                   teams={state.teams}
                   activities={state.activities}
+                  totalMatches={state.matches.length}
                   onChanged={async () => { await loadUsers(); await refresh(); }}
                   toast={toast}
                 />
@@ -349,7 +350,7 @@ function AdminMatchRow({ match, adminKey, teams, onSaved, toast }) {
   );
 }
 
-function AdminUserRow({ user, adminKey, teams, activities, onChanged, toast }) {
+function AdminUserRow({ user, adminKey, teams, activities, totalMatches, onChanged, toast }) {
   const [nome, setNome] = useState(user.nome);
   const [email, setEmail] = useState(user.email || '');
   const [telefone, setTelefone] = useState(user.telefone || '');
@@ -409,10 +410,24 @@ function AdminUserRow({ user, adminKey, teams, activities, onChanged, toast }) {
     }
   };
 
+  const betsCount = user.betsCount || 0;
+  let statusColor = 'bg-rose-500/20 text-rose-300 border-rose-500/30';
+  let statusText = 'Sem palpites';
+  if (betsCount > 0 && betsCount < totalMatches) {
+    statusColor = 'bg-orange-500/20 text-orange-300 border-orange-500/30';
+    statusText = `${betsCount}/${totalMatches} palpites`;
+  } else if (betsCount > 0 && betsCount >= totalMatches) {
+    statusColor = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+    statusText = 'Palpites completos';
+  }
+
   return (
     <div className="card p-4">
-      <div className="mb-3 flex items-center justify-between text-faint">
-        <span className="chip">#{user.id}</span>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-faint">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="chip">#{user.id}</span>
+          <span className={`chip border ${statusColor}`}>{statusText}</span>
+        </div>
         {!user.telefone && (
           <span className="inline-flex items-center gap-1 text-xs text-amber-300">
             <AlertTriangle size={13} /> sem telefone — não consegue logar
