@@ -253,7 +253,7 @@ export default function Admin() {
                   adminKey={key}
                   teams={state.teams}
                   activities={state.activities}
-                  totalMatches={state.matches.length}
+                  totalMatches={state.matches.filter((m) => m.phase === 'Fase de Grupos').length}
                   onChanged={async () => { await loadUsers(); await refresh(); }}
                   toast={toast}
                 />
