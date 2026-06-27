@@ -63,19 +63,29 @@ export function MatchCard({ match, bet, onChange, rules, index = 0 }) {
   const editable = status === 'open';
   const finished = status === 'finished';
   const result = finished ? classify(bet, match, rules) : null;
+  const isBrazil = match.home?.name === 'Brasil' || match.away?.name === 'Brasil';
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: Math.min(index * 0.03, 0.4) }}
-      className={`card p-4 transition-shadow ${editable ? 'hover:shadow-glow' : ''}`}
+      className={`card p-4 transition-shadow ${editable ? 'hover:shadow-glow' : ''} ${
+        isBrazil ? 'ring-2 ring-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.2)] bg-amber-400/5' : ''
+      }`}
     >
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <span className="chip text-xs">
-          {match.group ? `Grupo ${match.group}` : match.phase}
-          {match.group && <span className="text-[var(--text-faint)]">· {match.round}</span>}
-        </span>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="chip text-xs">
+            {match.group ? `Grupo ${match.group}` : match.phase}
+            {match.group && <span className="text-[var(--text-faint)]">· {match.round}</span>}
+          </span>
+          {isBrazil && (
+            <span className="chip border-amber-400 bg-amber-400 text-night font-bold text-[10px]">
+              🔥 JOGO DO BRASIL
+            </span>
+          )}
+        </div>
         <span className="text-faint">{fmtDate(match.date)}</span>
       </div>
 

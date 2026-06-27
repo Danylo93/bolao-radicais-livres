@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import import_react, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Target, Save, Loader2, Search, Sparkles, LogOut, Trophy, Radio } from 'lucide-react';
@@ -100,7 +100,7 @@ export default function Palpites() {
 
   const filtered = useMemo(() => {
     let list = [...state.matches];
-    if (status === 'abertos') list = list.filter((m) => matchStatus(m) === 'open');
+    if (status === 'abertos') list = list.filter((m) => matchStatus(m) === 'open' || matchStatus(m) === 'tbd');
     else if (status === 'ao_vivo') list = list.filter((m) => matchStatus(m) === 'locked');
     else if (status === 'encerrados') list = list.filter((m) => m.finished);
     if (phase !== 'todas') list = list.filter((m) => m.phase === phase);
@@ -263,20 +263,48 @@ export default function Palpites() {
         </EmptyState>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
-          {filtered.map((m, i) =>
-            status === 'ao_vivo' ? (
-              <LiveMatchCard key={m.id} match={m} rules={rules} index={i} bet={bets[m.id]} />
-            ) : (
-              <MatchCard
-                key={m.id}
-                match={m}
-                rules={rules}
-                index={i}
-                bet={bets[m.id]}
-                onChange={(val) => setBets((b) => ({ ...b, [m.id]: val }))}
-              />
-            )
-          )}
+          {filtered.map((m, i) => {
+            const prev = filtered[i - 1];
+            const isFirstMataMata =
+              status === 'abertos' &&
+              m.phase !== 'Fase de Grupos' &&
+              (!prev || prev.phase === 'Fase de Grupos');
+            
+            const isFirstGroup = 
+              status === 'abertos' && 
+              m.phase === 'Fase de Grupos' && 
+              !prev;
+
+            return (
+              <import_react.Fragment key={m.id}>
+                {isFirstGroup && (
+                  <div className="col-span-full mt-2 mb-1">
+                    <h3 className="text-lg font-bold text-amber-400 border-b border-amber-400/20 pb-2">
+                      Fase de Grupos
+                    </h3>
+                  </div>
+                )}
+                {isFirstMataMata && (
+                  <div className="col-span-full mt-6 mb-1">
+                    <h3 className="text-lg font-bold text-amber-400 border-b border-amber-400/20 pb-2 flex items-center gap-2">
+                      Mata-mata <span className="text-xs font-normal text-amber-400/60">(A partir dos 16-avos)</span>
+                    </h3>
+                  </div>
+                )}
+                {status === 'ao_vivo' ? (
+                  <LiveMatchCard match={m} rules={rules} index={i} bet={bets[m.id]} />
+                ) : (
+                  <MatchCard
+                    match={m}
+                    rules={rules}
+                    index={i}
+                    bet={bets[m.id]}
+                    onChange={(val) => setBets((b) => ({ ...b, [m.id]: val }))}
+                  />
+                )}
+              </import_react.Fragment>
+            );
+          })}
         </div>
       )}
 
