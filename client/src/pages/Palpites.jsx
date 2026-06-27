@@ -81,6 +81,33 @@ export default function Palpites() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [player?.id]);
 
+  useEffect(() => {
+    if (!loaded) return;
+    const now = new Date();
+    let needsWarning = false;
+    for (const m of state.matches) {
+      if (matchStatus(m) === 'open') {
+        const date = new Date(m.date);
+        const diffMs = date - now;
+        // Se falta menos de 30 minutos (e mais de 0) e o jogo ainda não fechou
+        if (diffMs > 0 && diffMs <= 30 * 60 * 1000) {
+          const b = bets[m.id];
+          if (!b || b.home === '' || b.home == null || b.away === '' || b.away == null) {
+            needsWarning = true;
+            break;
+          }
+        }
+      }
+    }
+    
+    if (needsWarning) {
+      if ('vibrate' in navigator) navigator.vibrate([200, 100, 200, 100, 500]);
+      document.body.classList.add('animate-shake');
+      toast('CORRE! Tem jogo começando em menos de 30 minutos e você não palpitou!', 'error');
+      setTimeout(() => document.body.classList.remove('animate-shake'), 800);
+    }
+  }, [loaded, state.matches, bets, toast]);
+
   const myPoints = useMemo(() => {
     let match = 0;
     let cravadas = 0;
