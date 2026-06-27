@@ -308,6 +308,39 @@ app.get('/api/cron/sync', wrap(async (req, res) => {
   res.json({ ok: true, ...result });
 }));
 
+app.get('/api/cron/push', wrap(async (req, res) => {
+  const secret = process.env.CRON_SECRET;
+  if (secret) {
+    const auth = req.headers.authorization || '';
+    if (auth !== `Bearer ${secret}`) return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const upcoming = await db.getMatchesToNotify(30);
+  if (!upcoming.length) return res.json({ sent: 0 });
+
+  const subs = await db.getAllSubscriptions();
+  const webpush = (await import('web-push')).default;
+
+  let sent = 0;
+  for (const match of upcoming) {
+    const msg = `⚽ Faltam 30 minutos: ${match.home.name} x ${match.away.name}. Você já fez seu palpite?`;
+    const payload = JSON.stringify({
+      title: 'Bolão Radicais Livres',
+      body: msg,
+      icon: '/icon-192.png',
+      url: '/palpites'
+    });
+
+    await Promise.all(subs.map(({ subscription }) => 
+      webpush.sendNotification(subscription, payload).catch(() => {})
+    ));
+    await db.markMatchNotified(match.id);
+    sent++;
+  }
+
+  res.json({ success: true, sent });
+}));
+
 app.use('/api', (req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
