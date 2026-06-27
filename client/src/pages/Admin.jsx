@@ -224,7 +224,7 @@ export default function Admin() {
             ))}
           </div>
         </>
-      ) : (
+      ) : view === 'participantes' ? (
         <>
           <div className="mb-4 flex items-center gap-3">
             <div className="relative flex-1">
