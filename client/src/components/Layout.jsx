@@ -154,7 +154,7 @@ export default function Layout({ children }) {
             <BackgroundMusic />
             <div className="h-4 w-px bg-white/10" />
             {player ? (
-              <Link to="/palpites" className="chip max-w-[10rem] truncate">
+              <Link to="/perfil" className="chip max-w-[10rem] truncate hover:bg-white/10 transition-colors" title="Editar Perfil">
                 <User size={14} className="text-emerald-300" />
                 <span className="truncate">{player.nome}</span>
               </Link>

@@ -5,6 +5,7 @@ import { Loading } from './components/ui';
 import Home from './pages/Home';
 import Cadastro from './pages/Cadastro';
 import Entrar from './pages/Entrar';
+import Perfil from './pages/Perfil';
 import Palpites from './pages/Palpites';
 import Ranking from './pages/Ranking';
 import Chaveamento from './pages/Chaveamento';
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/cadastro" element={<Cadastro />} />
           <Route path="/entrar" element={<Entrar />} />
+          <Route path="/perfil" element={<Perfil />} />
           <Route path="/palpites" element={<Palpites />} />
           <Route path="/ranking" element={<Ranking />} />
           <Route path="/chaveamento" element={<Chaveamento />} />

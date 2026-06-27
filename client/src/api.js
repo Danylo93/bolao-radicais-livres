@@ -14,6 +14,7 @@ export const api = {
   state: () => req('/state'),
   register: (body) => req('/register', { method: 'POST', body: JSON.stringify(body) }),
   login: (telefone) => req('/login', { method: 'POST', body: JSON.stringify({ telefone }) }),
+  updateProfile: (id, body) => req(`/users/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   user: (id) => req(`/users/${id}`),
   saveBets: (id, bets) =>
     req(`/users/${id}/bets`, { method: 'POST', body: JSON.stringify({ bets }) }),

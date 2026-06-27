@@ -103,6 +103,30 @@ app.get('/api/users/:id', wrap(async (req, res) => {
   res.json({ user: db.publicUser(user), bets, bonusPoints });
 }));
 
+app.put('/api/users/:id', wrap(async (req, res) => {
+  const { nome, celula, selecao, email, telefone } = req.body || {};
+  if (!nome || !String(nome).trim())
+    return res.status(400).json({ error: 'O nome é obrigatório.' });
+  if (!telefone || db.normalizePhone(telefone).length < 10)
+    return res.status(400).json({ error: 'Informe um telefone válido com DDD.' });
+  if (email && !EMAIL_RE.test(String(email).trim()))
+    return res.status(400).json({ error: 'E-mail inválido.' });
+  
+  const existingId = await db.findUserByPhone(telefone);
+  if (existingId && existingId.id !== Number(req.params.id)) {
+    return res.status(409).json({ error: 'Esse telefone já está sendo usado por outro usuário.' });
+  }
+
+  try {
+    const user = await db.updateUser(Number(req.params.id), { nome, celula, selecao, email, telefone });
+    res.json({ user: db.publicUser(user) });
+  } catch (e) {
+    if (e.code === '23505')
+      return res.status(409).json({ error: 'Telefone ou e-mail já cadastrado para outro usuário.' });
+    throw e;
+  }
+}));
+
 app.post('/api/users/:id/bets', wrap(async (req, res) => {
   const user = await db.getUserById(Number(req.params.id));
   if (!user) return res.status(404).json({ error: 'Participante não encontrado.' });
