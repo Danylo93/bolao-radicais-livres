@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Home, Target, Trophy, ScrollText, User, CheckCircle2, XCircle, Info, Volume2, VolumeX } from 'lucide-react';
+import { Home, Target, Trophy, Swords, ScrollText, User, CheckCircle2, XCircle, Info, Volume2, VolumeX } from 'lucide-react';
 import { useStore } from '../store';
 import { Background } from './ui';
 
@@ -9,6 +9,7 @@ const NAV = [
   { to: '/', label: 'Início', icon: Home, end: true },
   { to: '/palpites', label: 'Palpites', icon: Target },
   { to: '/ranking', label: 'Ranking', icon: Trophy },
+  { to: '/chaveamento', label: 'Chave', icon: Swords },
   { to: '/regras', label: 'Regras', icon: ScrollText },
 ];
 
@@ -170,7 +171,7 @@ export default function Layout({ children }) {
 
       {/* Bottom nav (mobile) */}
       <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-amber-400/20 bg-pitch-card/90 backdrop-blur-xl md:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-5">
+        <div className="mx-auto grid max-w-md grid-cols-6">
           {NAV.map((n) => (
             <NavLink
               key={n.to}

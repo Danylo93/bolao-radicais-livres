@@ -7,6 +7,7 @@ import Cadastro from './pages/Cadastro';
 import Entrar from './pages/Entrar';
 import Palpites from './pages/Palpites';
 import Ranking from './pages/Ranking';
+import Chaveamento from './pages/Chaveamento';
 import Regras from './pages/Regras';
 import Admin from './pages/Admin';
 
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="/entrar" element={<Entrar />} />
           <Route path="/palpites" element={<Palpites />} />
           <Route path="/ranking" element={<Ranking />} />
+          <Route path="/chaveamento" element={<Chaveamento />} />
           <Route path="/regras" element={<Regras />} />
           <Route path="/admin" element={<Admin />} />
         </Routes>

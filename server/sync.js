@@ -4,6 +4,22 @@ import { buildSeed, englishKeyForTeamName, teamByEnglish } from './data.js';
 const FINISHED_STATUS = new Set(['FT', 'AET', 'PEN']);
 const LIVE_STATUS = new Set(['1H', 'HT', '2H', 'ET', 'BT', 'P', 'LIVE', 'INT']);
 
+// Mapeia o nome da rodada (API) para a fase do nosso mata-mata.
+// Ordem importa: "quarter/semi/3rd" antes de "final" (que casa como substring).
+const KO_ROUND_MAP = [
+  [/round of 32|16[\s-]*avos/i, '16-avos'],
+  [/round of 16|oitavas/i, 'Oitavas'],
+  [/quarter|quartas/i, 'Quartas'],
+  [/semi/i, 'Semifinal'],
+  [/third place|3rd place|disputa/i, 'Disputa do 3º'],
+  [/final/i, 'Final'],
+];
+function koPhaseFromRound(round) {
+  if (!round || /group/i.test(round)) return null;
+  for (const [re, phase] of KO_ROUND_MAP) if (re.test(round)) return phase;
+  return null;
+}
+
 const API_NAME_ALIASES = {
   'Korea Republic': 'South Korea',
   'Republic of Korea': 'South Korea',
@@ -91,6 +107,36 @@ async function applyGames(games, source) {
     updated += 1;
   }
 
+  // --- Mata-mata: preenche os confrontos vazios conforme a API os define ---
+  // (a API é a fonte da verdade dos classificados; placares entram no ciclo
+  // seguinte pelo casamento por nome acima). Só preenche slots ainda "A definir".
+  const koByPhase = {};
+  for (const g of games) {
+    if (!g.phase) continue;
+    const home = g.homeEn ? teamByEnglish(normEn(g.homeEn)) : null;
+    const away = g.awayEn ? teamByEnglish(normEn(g.awayEn)) : null;
+    if (!home || !away) continue; // ignora confrontos ainda indefinidos (ex.: "Winner Group A")
+    (koByPhase[g.phase] ||= []).push({ home, away, date: g.date });
+  }
+  for (const [phase, apiGames] of Object.entries(koByPhase)) {
+    apiGames.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+    const slots = matches
+      .filter((m) => m.phase === phase && (!m.home || !m.away))
+      .sort((a, b) => new Date(a.date) - new Date(b.date) || a.id.localeCompare(b.id));
+    for (let i = 0; i < slots.length && i < apiGames.length; i++) {
+      const slot = slots[i];
+      const ag = apiGames[i];
+      const patch = {};
+      if (!slot.home) patch.home = ag.home;
+      if (!slot.away) patch.away = ag.away;
+      if (ag.date) patch.date = ag.date;
+      if (Object.keys(patch).length) {
+        await db.updateMatch(slot.id, patch);
+        updated += 1;
+      }
+    }
+  }
+
   return { updated, source, total: games.length };
 }
 
@@ -122,6 +168,8 @@ async function fetchApiFootball(key) {
       finished: FINISHED_STATUS.has(status),
       live: LIVE_STATUS.has(status),
       group,
+      phase: koPhaseFromRound(round),
+      date: row.fixture?.date || null,
     };
   });
 }
@@ -139,6 +187,8 @@ async function fetchWorldCupApi() {
     finished: String(g.finished).toUpperCase() === 'TRUE' || g.time_elapsed === 'finished',
     live: g.time_elapsed && g.time_elapsed !== 'finished' && String(g.finished).toUpperCase() !== 'TRUE',
     group: g.group || null,
+    phase: koPhaseFromRound(g.type || g.stage || g.round || ''),
+    date: g.date || g.datetime || g.match_time || null,
   }));
 }
 
