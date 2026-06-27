@@ -13,10 +13,6 @@
     {
       "path": "/api/cron/sync",
       "schedule": "0 12 * * *"
-    },
-    {
-      "path": "/api/cron/push",
-      "schedule": "*/5 * * * *"
     }
   ],
   "rewrites": [
