@@ -18,9 +18,17 @@ export const api = {
   user: (id) => req(`/users/${id}`),
   saveBets: (id, bets) =>
     req(`/users/${id}/bets`, { method: 'POST', body: JSON.stringify({ bets }) }),
+  pushSubscribe: (userId, subscription) => 
+    req('/push-subscribe', { method: 'POST', body: JSON.stringify({ userId, subscription }) }),
   ranking: () => req('/ranking'),
 
   adminLogin: (key) => req('/admin/login', { method: 'POST', body: JSON.stringify({ key }) }),
+  adminSendPush: (key, message) => 
+    req('/admin/push-send', { 
+      method: 'POST', 
+      headers: { 'x-admin-key': key },
+      body: JSON.stringify({ message }) 
+    }),
   adminUsers: (key) => req('/admin/users', { headers: { 'x-admin-key': key } }),
   adminUpdateUser: (key, id, patch) =>
     req(`/admin/users/${id}`, {

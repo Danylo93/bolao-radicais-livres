@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import { useStore } from './store';
+import { usePush } from './usePush';
 import { Loading } from './components/ui';
 import Home from './pages/Home';
 import Cadastro from './pages/Cadastro';
@@ -14,6 +15,9 @@ import Admin from './pages/Admin';
 
 export default function App() {
   const { loading, state } = useStore();
+  
+  // Registra Service Worker e Push
+  usePush();
 
   return (
     <Layout>

@@ -27,6 +27,38 @@ db.init()
       console.log(`\n  ⚽  Bolão RL no ar em http://localhost:${PORT}`);
       console.log(`  🔑  Chave admin: ${ADMIN_KEY}\n`);
     });
+
+    // CRON: A cada 5 minutos checa se tem jogos começando em até 30 minutos
+    setInterval(async () => {
+      try {
+        const upcoming = await db.getMatchesToNotify(30);
+        if (!upcoming.length) return;
+
+        const subs = await db.getAllSubscriptions();
+        const webpush = (await import('web-push')).default;
+
+        for (const match of upcoming) {
+          const msg = `⚽ Faltam 30 minutos: ${match.home.name} x ${match.away.name}. Você já fez seu palpite?`;
+          const payload = JSON.stringify({
+            title: 'Bolão Radicais Livres',
+            body: msg,
+            icon: '/icon-192.png',
+            url: '/palpites'
+          });
+
+          // Dispara pra todos (em chunks seria ideal, mas pra app pequeno serve)
+          await Promise.all(subs.map(({ subscription }) => 
+            webpush.sendNotification(subscription, payload).catch(() => {})
+          ));
+
+          await db.markMatchNotified(match.id);
+          console.log(`🔔 Notificação automática enviada para o jogo ${match.id}`);
+        }
+      } catch (e) {
+        console.error('Erro no cron de notificações:', e);
+      }
+    }, 5 * 60 * 1000); // 5 minutos
+
   })
   .catch((e) => {
     console.error('\n❌  Falha ao iniciar (banco de dados):', e.message);

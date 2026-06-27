@@ -55,9 +55,13 @@ export async function init() {
       match_date  TIMESTAMPTZ NOT NULL,
       home_score  INTEGER,
       away_score  INTEGER,
-      finished    BOOLEAN NOT NULL DEFAULT FALSE
+      finished    BOOLEAN NOT NULL DEFAULT FALSE,
+      notified_push BOOLEAN NOT NULL DEFAULT FALSE
     );
   `);
+  
+  // Migração para os bancos existentes
+  await pool.query(`ALTER TABLE matches ADD COLUMN IF NOT EXISTS notified_push BOOLEAN DEFAULT FALSE;`);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
@@ -99,6 +103,17 @@ export async function init() {
     CREATE TABLE IF NOT EXISTS meta (
       key   TEXT PRIMARY KEY,
       value TEXT NOT NULL
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      endpoint TEXT NOT NULL UNIQUE,
+      p256dh TEXT NOT NULL,
+      auth TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
   `);
 
@@ -343,10 +358,53 @@ export async function getMeta(key) {
 export async function setMeta(key, value) {
   await pool.query(
     `INSERT INTO meta (key, value) VALUES ($1, $2)
-     ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+     ON CONFLICT (key) DO UPDATE SET value = $2`,
     [key, String(value)]
   );
 }
+
+// ----------------------------- Push Notifications ------------------------------
+
+export async function saveSubscription(userId, subscription) {
+  const { endpoint, keys } = subscription;
+  if (!endpoint || !keys || !keys.p256dh || !keys.auth) return;
+  
+  await pool.query(
+    `INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth)
+     VALUES ($1, $2, $3, $4)
+     ON CONFLICT (endpoint) DO UPDATE 
+     SET user_id = $1, p256dh = $3, auth = $4`,
+    [userId, endpoint, keys.p256dh, keys.auth]
+  );
+}
+
+export async function getAllSubscriptions() {
+  const { rows } = await pool.query('SELECT user_id, endpoint, p256dh, auth FROM push_subscriptions');
+  return rows.map(r => ({
+    userId: r.user_id,
+    subscription: {
+      endpoint: r.endpoint,
+      keys: { p256dh: r.p256dh, auth: r.auth }
+    }
+  }));
+}
+
+export async function getMatchesToNotify(minutesFromNow = 30) {
+  const { rows } = await pool.query(`
+    SELECT * FROM matches 
+    WHERE notified_push = FALSE 
+    AND match_date > now() 
+    AND match_date <= now() + interval '1 minute' * $1
+    AND home_name IS NOT NULL AND home_name <> ''
+    AND away_name IS NOT NULL AND away_name <> ''
+  `, [minutesFromNow]);
+  return rows.map(rowToMatch);
+}
+
+export async function markMatchNotified(id) {
+  await pool.query('UPDATE matches SET notified_push = TRUE WHERE id = $1', [id]);
+}
+
 
 export async function shouldSync(maxAgeMs = 5 * 60 * 1000) {
   const last = await getMeta('last_sync_at');

@@ -1,7 +1,14 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import webpush from 'web-push';
 import * as db from './db.js';
+
+webpush.setVapidDetails(
+  'mailto:bolao@radicaislivres.com.br',
+  'BPuVgG3tnQhPuSSk5V_msyDygOgeUx7DLLrl_9YEYuzvd0clKlnZsrpZIKm_ivQLMWz522laK2X7Woz_kX4LuJw',
+  '9DW0AMqznNaf-pD7DxEsGO4LS8y0vIFLPpJWCpM4LTw'
+);
 import { TOURNAMENT, RULES, TEAMS, PHASE_ORDER, ACTIVITIES, ACTIVITY_POINTS } from './data.js';
 import { computeRanking } from './scoring.js';
 import { maybeSync, syncMatches } from './sync.js';
@@ -241,6 +248,47 @@ app.post('/api/admin/reset', requireAdmin, wrap(async (req, res) => {
   if (what === 'participants') await db.resetParticipants();
   else if (what === 'results') await db.resetResults();
   res.json({ ok: true });
+}));
+
+app.post('/api/push-subscribe', wrap(async (req, res) => {
+  const { userId, subscription } = req.body;
+  if (!userId || !subscription) return res.status(400).json({ error: 'Faltam dados da inscrição.' });
+  
+  await db.saveSubscription(userId, subscription);
+  res.json({ success: true });
+}));
+
+app.post('/api/admin/push-send', requireAdmin, wrap(async (req, res) => {
+  const { message } = req.body;
+  if (!message) return res.status(400).json({ error: 'A mensagem é obrigatória.' });
+
+  const subscriptions = await db.getAllSubscriptions();
+  
+  const payload = JSON.stringify({
+    title: 'Bolão Radicais Livres',
+    body: message,
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    url: '/palpites'
+  });
+
+  let successCount = 0;
+  const promises = subscriptions.map(async ({ subscription }) => {
+    try {
+      await webpush.sendNotification(subscription, payload);
+      successCount++;
+    } catch (err) {
+      if (err.statusCode === 404 || err.statusCode === 410) {
+        // Inscricao expirou ou foi removida pelo user (poderia deletar do db aqui)
+      } else {
+        console.error('Push error:', err);
+      }
+    }
+  });
+
+  await Promise.all(promises);
+
+  res.json({ success: true, sent: successCount, total: subscriptions.length });
 }));
 
 app.post('/api/admin/sync', requireAdmin, wrap(async (req, res) => {

@@ -179,11 +179,12 @@ export default function Admin() {
         </div>
       </div>
 
-      {/* Alternância Jogos / Participantes */}
-      <div className="mb-6 grid max-w-md grid-cols-2 gap-1 rounded-2xl bg-white/5 p-1">
+      {/* Alternância Jogos / Participantes / Notificações */}
+      <div className="mb-6 grid max-w-md grid-cols-3 gap-1 rounded-2xl bg-white/5 p-1">
         {[
           { k: 'jogos', label: 'Jogos', icon: CalendarDays },
           { k: 'participantes', label: 'Participantes', icon: Users },
+          { k: 'push', label: 'Notificar', icon: Mail },
         ].map((t) => (
           <button
             key={t.k}
@@ -261,7 +262,51 @@ export default function Admin() {
             </div>
           )}
         </>
+      ) : (
+        <AdminPushTab adminKey={key} toast={toast} />
       )}
+    </div>
+  );
+}
+
+function AdminPushTab({ adminKey, toast }) {
+  const [msg, setMsg] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const send = async () => {
+    if (!msg.trim()) return toast('Escreva uma mensagem!', 'error');
+    if (!confirm('Deseja enviar esta notificação para todos os inscritos?')) return;
+    
+    setBusy(true);
+    try {
+      const res = await api.adminSendPush(adminKey, msg);
+      toast(`Push enviado para ${res.sent} de ${res.total} usuários! ✅`, 'success');
+      setMsg('');
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="card max-w-lg p-6">
+      <h3 className="mb-2 text-lg font-bold text-amber-400">Notificações Web Push</h3>
+      <p className="mb-4 text-sm text-muted">
+        Envie uma notificação para todos os usuários que permitiram receber alertas no navegador ou celular.
+      </p>
+      
+      <textarea
+        className="input mb-4 min-h-[100px] resize-y"
+        placeholder="Ex: Os palpites do Mata-mata estão abertos!"
+        value={msg}
+        onChange={(e) => setMsg(e.target.value)}
+      />
+      
+      <button onClick={send} disabled={busy || !msg.trim()} className="btn-primary w-full">
+        {busy ? <Loader2 className="animate-spin" size={16} /> : <Mail size={16} />}
+        {busy ? 'Enviando...' : 'Disparar Notificação'}
+      </button>
     </div>
   );
 }
