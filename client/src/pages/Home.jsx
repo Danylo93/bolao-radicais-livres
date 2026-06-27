@@ -23,6 +23,7 @@ import {
   CheckCircle,
   ChevronLeft,
   ChevronRight,
+  Swords,
 } from 'lucide-react';
 import { useStore } from '../store';
 import { api } from '../api';
@@ -213,6 +214,33 @@ export default function Home() {
         <StatCard icon={Trophy} value={stats.finished} label="Jogos encerrados" tone="amber" />
         <NextMatchCard next={stats.nextMatch} />
       </section>
+
+      {/* CHAVEAMENTO */}
+      <Reveal>
+        <Link
+          to="/chaveamento"
+          className="card group flex items-center gap-4 border-amber-400/25 p-5 shadow-gold transition hover:bg-white/[0.05] sm:p-6"
+        >
+          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-amber-400/30 to-emerald-400/15 text-amber-200">
+            <Swords size={26} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-display text-lg font-bold uppercase tracking-wide text-white">
+              Chaveamento
+            </h3>
+            <p className="text-muted">
+              Do mata-mata à final —{' '}
+              <b className="text-amber-200">
+                {state.matches.filter((m) => m.phase !== 'Fase de Grupos' && m.home && m.away).length}/32
+              </b>{' '}
+              confrontos definidos.
+            </p>
+          </div>
+          <span className="btn-ghost shrink-0 px-3 py-2 text-sm">
+            Ver <ArrowRight size={16} />
+          </span>
+        </Link>
+      </Reveal>
 
       {/* COMO FUNCIONA */}
       <section>
