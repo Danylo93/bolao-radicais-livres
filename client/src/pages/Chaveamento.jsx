@@ -33,14 +33,13 @@ export default function Chaveamento() {
       <PageHeader
         icon={Swords}
         title="Chaveamento"
-        subtitle="Do mata-mata à final. Preenche sozinho conforme as seleções se classificam. 🏆"
+        subtitle="Agora o bicho vai pegar, vamos ver quem será o grande campeão. 🏆"
       />
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <span className="chip">
           <Swords size={14} className="text-amber-300" /> {definidos}/{totalKo} confrontos definidos
         </span>
-        <span className="chip text-[var(--text-muted)]">Atualiza ao abrir o app</span>
       </div>
 
       {/* Colunas por fase (rolagem horizontal no desktop, empilhado no mobile) */}

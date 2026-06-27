@@ -97,7 +97,6 @@ export default function Perfil() {
             value={form.telefone}
             disabled
           />
-          <p className="text-xs text-muted mt-1">O telefone não pode ser alterado pois é usado para o login.</p>
         </Field>
 
         <button type="submit" disabled={busy} className="btn-primary w-full text-base">
