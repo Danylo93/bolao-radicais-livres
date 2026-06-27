@@ -101,10 +101,10 @@ export default function Palpites() {
     }
     
     if (needsWarning) {
-      if ('vibrate' in navigator) navigator.vibrate([200, 100, 200, 100, 500]);
+      if ('vibrate' in navigator) navigator.vibrate([300, 200, 300, 200, 300, 200, 300, 200, 300, 200, 300, 200, 300]);
       document.body.classList.add('animate-shake');
-      toast('CORRE! Tem jogo começando em menos de 30 minutos e você não palpitou!', 'error');
-      setTimeout(() => document.body.classList.remove('animate-shake'), 800);
+      toast('CORRE! Tem jogo começando em menos de 30 minutos e você não palpitou!', 'error', 5000);
+      setTimeout(() => document.body.classList.remove('animate-shake'), 4500);
     }
   }, [loaded, state.matches, bets, toast]);
 

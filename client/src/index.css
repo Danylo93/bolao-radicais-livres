@@ -109,7 +109,7 @@ h4 {
     20%, 40%, 60%, 80% { transform: translateX(10px); }
   }
   .animate-shake {
-    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) infinite;
   }
   .text-copa {
     color: #fff;

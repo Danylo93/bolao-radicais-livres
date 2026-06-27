@@ -40,10 +40,10 @@ export function StoreProvider({ children }) {
     localStorage.removeItem(PLAYER_KEY);
   }, []);
 
-  const toast = useCallback((msg, type = 'success') => {
+  const toast = useCallback((msg, type = 'success', duration = 3500) => {
     const id = Date.now() + Math.random();
     setToasts((t) => [...t, { id, msg, type }]);
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3500);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), duration);
   }, []);
 
   return (
