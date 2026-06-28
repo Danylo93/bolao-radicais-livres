@@ -79,15 +79,19 @@ function BracketMatch({ match }) {
   const as = match.awayScore;
   const homeWin = finished && hs != null && as != null && hs > as;
   const awayWin = finished && hs != null && as != null && as > hs;
+  const isBrazil = match.home?.name === 'Brasil' || match.away?.name === 'Brasil';
 
   return (
     <div
       className={`card p-3 ${live ? 'border-amber-400/30 shadow-gold' : ''} ${
         finished ? 'border-cyan-400/20' : ''
-      }`}
+      } ${isBrazil ? 'ring-2 ring-amber-400 shadow-gold' : ''}`}
     >
       <div className="mb-2 flex items-center justify-between text-[11px]">
-        <span className="text-[var(--text-faint)]">{fmtDate(match.date)}</span>
+        <span className="flex items-center gap-1 text-[var(--text-faint)]">
+          {isBrazil && <span className="font-bold text-amber-300">🔥</span>}
+          {fmtDate(match.date)}
+        </span>
         {live ? (
           <span className="inline-flex items-center gap-1 font-semibold text-amber-200">
             <span className="live-dot h-1.5 w-1.5 rounded-full bg-rose-400" />
