@@ -7,7 +7,6 @@ import { fmtDate, matchStatus, hasLiveScore } from '../utils';
 export default function Chaveamento() {
   const { state } = useStore();
 
-  // Fases do mata-mata, na ordem (tudo menos a fase de grupos).
   const phases = useMemo(
     () => (state.phaseOrder || []).filter((p) => p !== 'Fase de Grupos'),
     [state.phaseOrder]
@@ -42,30 +41,53 @@ export default function Chaveamento() {
         </span>
       </div>
 
-      {/* Colunas por fase (rolagem horizontal no desktop, empilhado no mobile) */}
-      <div className="flex flex-col gap-6 lg:flex-row lg:gap-4 lg:overflow-x-auto lg:pb-4">
+      {/* Mobile: cada fase em seção separada */}
+      <div className="flex flex-col gap-8 lg:hidden">
         {phases.map((phase) => (
-          <section key={phase} className="lg:min-w-[280px] lg:flex-1">
-            <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold uppercase tracking-wide text-white">
-              {phase === 'Final' ? (
-                <Trophy size={18} className="text-amber-300" />
-              ) : (
-                <Swords size={16} className="text-amber-300/80" />
-              )}
-              {phase}
-              <span className="text-xs font-normal text-[var(--text-faint)]">
-                ({byPhase[phase].length})
-              </span>
-            </h2>
-            <div className="flex flex-col gap-3 lg:h-full lg:justify-around">
-              {byPhase[phase].map((m, i) => (
-                <BracketMatch key={m.id} match={m} index={i} />
+          <section key={phase}>
+            <PhaseTitle phase={phase} count={byPhase[phase]?.length} />
+            <div className="flex flex-col gap-3">
+              {(byPhase[phase] || []).map((m) => (
+                <BracketMatch key={m.id} match={m} />
               ))}
             </div>
           </section>
         ))}
       </div>
+
+      {/* Desktop: layout em colunas com alinhamento vertical proporcional */}
+      <div className="hidden lg:flex lg:gap-3 lg:overflow-x-auto lg:pb-4">
+        {phases.map((phase) => {
+          const matches = byPhase[phase] || [];
+          return (
+            <section key={phase} className="min-w-[260px] flex-1 flex flex-col">
+              <PhaseTitle phase={phase} count={matches.length} />
+              <div className="flex flex-1 flex-col justify-around gap-2">
+                {matches.map((m) => (
+                  <BracketMatch key={m.id} match={m} />
+                ))}
+              </div>
+            </section>
+          );
+        })}
+      </div>
     </div>
+  );
+}
+
+function PhaseTitle({ phase, count }) {
+  return (
+    <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold uppercase tracking-wide text-white">
+      {phase === 'Final' ? (
+        <Trophy size={18} className="text-amber-300" />
+      ) : (
+        <Swords size={16} className="text-amber-300/80" />
+      )}
+      {phase}
+      <span className="text-xs font-normal text-[var(--text-faint)]">
+        ({count})
+      </span>
+    </h2>
   );
 }
 
@@ -78,7 +100,6 @@ function BracketMatch({ match }) {
   const hs = match.homeScore;
   const as = match.awayScore;
 
-  // Se foi para pênaltis, quem ganhou os pênaltis é o vencedor
   let homeWin = false;
   let awayWin = false;
   if (finished && hs != null && as != null) {
