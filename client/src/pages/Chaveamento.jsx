@@ -12,12 +12,28 @@ export default function Chaveamento() {
     [state.phaseOrder]
   );
 
+  const BRACKET_ORDER = {
+    // Ordem visual para que os vencedores se cruzem corretamente na tela
+    '16-avos': [1, 3, 2, 5, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+  };
+
   const byPhase = useMemo(() => {
     const map = {};
     for (const p of phases) {
       map[p] = state.matches
         .filter((m) => m.phase === p)
-        .sort((a, b) => new Date(a.date) - new Date(b.date) || a.id.localeCompare(b.id));
+        .sort((a, b) => {
+          const numA = parseInt(a.id.split('-').pop(), 10) || 0;
+          const numB = parseInt(b.id.split('-').pop(), 10) || 0;
+          
+          if (BRACKET_ORDER[p]) {
+            const idxA = BRACKET_ORDER[p].indexOf(numA);
+            const idxB = BRACKET_ORDER[p].indexOf(numB);
+            if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+          }
+          
+          return numA - numB;
+        });
     }
     return map;
   }, [state.matches, phases]);
