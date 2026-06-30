@@ -92,6 +92,9 @@ async function applyGames(games, source) {
       if (ext.finished && hs != null && as != null && m.finished !== true) {
         patch.finished = true;
       }
+      if (ext.penalties && m.penalties !== ext.penalties) {
+        patch.penalties = ext.penalties;
+      }
     }
 
     if (!m.home && ext.homeEn) {
@@ -109,32 +112,66 @@ async function applyGames(games, source) {
   }
 
   // --- Mata-mata: preenche os confrontos vazios conforme a API os define ---
-  // (a API é a fonte da verdade dos classificados; placares entram no ciclo
-  // seguinte pelo casamento por nome acima). Só preenche slots ainda "A definir".
+  // Agora inclui jogos parcialmente definidos (ex.: "Brazil vs ?") para
+  // completar o adversário quando a API já tiver a info.
   const koByPhase = {};
   for (const g of games) {
     if (!g.phase) continue;
     const home = g.homeEn ? teamByEnglish(normEn(g.homeEn)) : null;
     const away = g.awayEn ? teamByEnglish(normEn(g.awayEn)) : null;
-    if (!home || !away) continue; // ignora confrontos ainda indefinidos (ex.: "Winner Group A")
-    (koByPhase[g.phase] ||= []).push({ home, away, date: g.date });
+    if (!home && !away) continue; // ignora se os dois lados são indefinidos
+    (koByPhase[g.phase] ||= []).push({ home, away, date: g.date, penalties: g.penalties });
   }
   for (const [phase, apiGames] of Object.entries(koByPhase)) {
-    apiGames.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
     const slots = matches
       .filter((m) => m.phase === phase && (!m.home || !m.away))
       .sort((a, b) => new Date(a.date) - new Date(b.date) || a.id.localeCompare(b.id));
-    for (let i = 0; i < slots.length && i < apiGames.length; i++) {
-      const slot = slots[i];
-      const ag = apiGames[i];
+
+    for (const ag of apiGames) {
+      // Tenta casar pelo time que já está preenchido no slot
+      let slot = null;
+      if (ag.home && ag.away) {
+        // Confronto completo: procura slot que tenha um dos times ou esteja vazio
+        slot = slots.find(
+          (s) =>
+            (s.home?.name === ag.home.name || s.away?.name === ag.away.name) ||
+            (!s.home && !s.away)
+        );
+      } else if (ag.home) {
+        // Só mandante definido: procura slot que já tenha esse mandante
+        slot = slots.find((s) => s.home?.name === ag.home.name);
+      } else if (ag.away) {
+        slot = slots.find((s) => s.away?.name === ag.away.name);
+      }
+      if (!slot) continue;
+
       const patch = {};
-      if (!slot.home) patch.home = ag.home;
-      if (!slot.away) patch.away = ag.away;
+      if (!slot.home && ag.home) patch.home = ag.home;
+      if (!slot.away && ag.away) patch.away = ag.away;
       if (ag.date) patch.date = ag.date;
       if (Object.keys(patch).length) {
         await db.updateMatch(slot.id, patch);
+        // Remove o slot da lista para não reusar
+        const idx = slots.indexOf(slot);
+        if (idx !== -1) slots.splice(idx, 1);
         updated += 1;
       }
+    }
+
+    // Segunda passada: confrontos completos da API que não casaram com nenhum slot existente
+    // vão para os primeiros slots totalmente vazios (ambos os times null)
+    const remainingFull = apiGames.filter(
+      (ag) => ag.home && ag.away && slots.some((s) => !s.home && !s.away)
+    );
+    for (const ag of remainingFull) {
+      const slot = slots.find((s) => !s.home && !s.away);
+      if (!slot) break;
+      const patch = { home: ag.home, away: ag.away };
+      if (ag.date) patch.date = ag.date;
+      await db.updateMatch(slot.id, patch);
+      const idx = slots.indexOf(slot);
+      if (idx !== -1) slots.splice(idx, 1);
+      updated += 1;
     }
   }
 

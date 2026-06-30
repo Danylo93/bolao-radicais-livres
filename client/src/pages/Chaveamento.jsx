@@ -77,8 +77,21 @@ function BracketMatch({ match }) {
 
   const hs = match.homeScore;
   const as = match.awayScore;
-  const homeWin = finished && hs != null && as != null && hs > as;
-  const awayWin = finished && hs != null && as != null && as > hs;
+
+  // Se foi para pênaltis, quem ganhou os pênaltis é o vencedor
+  let homeWin = false;
+  let awayWin = false;
+  if (finished && hs != null && as != null) {
+    if (match.penalties) {
+      const [ph, pa] = match.penalties.split('-').map(Number);
+      homeWin = ph > pa;
+      awayWin = pa > ph;
+    } else {
+      homeWin = hs > as;
+      awayWin = as > hs;
+    }
+  }
+
   const isBrazil = match.home?.name === 'Brasil' || match.away?.name === 'Brasil';
 
   return (
@@ -109,6 +122,12 @@ function BracketMatch({ match }) {
       <TeamLine team={match.home} score={showScore ? hs : null} win={homeWin} dim={finished && !homeWin} />
       <div className="my-1 h-px bg-white/5" />
       <TeamLine team={match.away} score={showScore ? as : null} win={awayWin} dim={finished && !awayWin} />
+
+      {finished && match.penalties && (
+        <div className="mt-2 text-center text-[11px] font-semibold text-amber-200/80">
+          Pênaltis: {match.penalties.split('-')[0]} × {match.penalties.split('-')[1]}
+        </div>
+      )}
     </div>
   );
 }

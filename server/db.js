@@ -33,6 +33,7 @@ function rowToMatch(r) {
     homeScore: r.home_score,
     awayScore: r.away_score,
     finished: r.finished,
+    penalties: r.penalties || null,
   };
 }
 
@@ -184,13 +185,14 @@ export async function updateMatch(id, p) {
   let as = p.awayScore !== undefined ? (p.awayScore === '' || p.awayScore === null ? null : Number(p.awayScore)) : cur.awayScore;
   let finished = p.finished !== undefined ? !!p.finished : cur.finished;
   if (finished && (hs == null || as == null)) finished = false;
+  const penalties = p.penalties !== undefined ? (p.penalties || null) : cur.penalties;
 
   await pool.query(
     `UPDATE matches
        SET home_name=$2, home_flag=$3, away_name=$4, away_flag=$5,
-           match_date=$6, home_score=$7, away_score=$8, finished=$9
+           match_date=$6, home_score=$7, away_score=$8, finished=$9, penalties=$10
      WHERE id=$1`,
-    [id, home?.name ?? null, home?.flag ?? null, away?.name ?? null, away?.flag ?? null, date, hs, as, finished]
+    [id, home?.name ?? null, home?.flag ?? null, away?.name ?? null, away?.flag ?? null, date, hs, as, finished, penalties]
   );
   return getMatch(id);
 }
