@@ -7,11 +7,11 @@ const LIVE_STATUS = new Set(['1H', 'HT', '2H', 'ET', 'BT', 'P', 'LIVE', 'INT']);
 // Mapeia o nome da rodada (API) para a fase do nosso mata-mata.
 // Ordem importa: "quarter/semi/3rd" antes de "final" (que casa como substring).
 const KO_ROUND_MAP = [
-  [/round of 32|16[\s-]*avos/i, '16-avos'],
-  [/round of 16|oitavas/i, 'Oitavas'],
-  [/quarter|quartas/i, 'Quartas'],
-  [/semi/i, 'Semifinal'],
-  [/third place|3rd place|disputa/i, 'Disputa do 3º'],
+  [/round of 32|r32|16[\s-]*avos/i, '16-avos'],
+  [/round of 16|r16|oitavas/i, 'Oitavas'],
+  [/quarter|qf|quartas/i, 'Quartas'],
+  [/semi|sf/i, 'Semifinal'],
+  [/third place|3rd place|third|disputa/i, 'Disputa do 3º'],
   [/final/i, 'Final'],
 ];
 function koPhaseFromRound(round) {
@@ -31,6 +31,7 @@ const API_NAME_ALIASES = {
   'IR Iran': 'Iran',
   'DR Congo': 'DR Congo',
   'Congo DR': 'DR Congo',
+  'Democratic Republic of the Congo': 'DR Congo',
 };
 
 function normEn(name) {
