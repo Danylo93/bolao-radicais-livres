@@ -112,36 +112,53 @@ async function applyGames(games, source) {
   }
 
   // --- Mata-mata: preenche os confrontos vazios conforme a API os define ---
-  // Agora inclui jogos parcialmente definidos (ex.: "Brazil vs ?") para
-  // completar o adversário quando a API já tiver a info.
+  // Inclui jogos parcialmente definidos para completar o adversário.
+  // Rastreia confrontos já colocados para NUNCA duplicar.
   const koByPhase = {};
   for (const g of games) {
     if (!g.phase) continue;
     const home = g.homeEn ? teamByEnglish(normEn(g.homeEn)) : null;
     const away = g.awayEn ? teamByEnglish(normEn(g.awayEn)) : null;
-    if (!home && !away) continue; // ignora se os dois lados são indefinidos
+    if (!home && !away) continue;
     (koByPhase[g.phase] ||= []).push({ home, away, date: g.date, penalties: g.penalties });
   }
   for (const [phase, apiGames] of Object.entries(koByPhase)) {
+    // Confrontos já existentes na fase (para não duplicar)
+    const existingPairs = new Set();
+    for (const m of matches) {
+      if (m.phase === phase && m.home && m.away) {
+        existingPairs.add(`${m.home.name}|${m.away.name}`);
+      }
+    }
+
     const slots = matches
       .filter((m) => m.phase === phase && (!m.home || !m.away))
       .sort((a, b) => new Date(a.date) - new Date(b.date) || a.id.localeCompare(b.id));
 
-    for (const ag of apiGames) {
-      // Tenta casar pelo time que já está preenchido no slot
+    // Deduplica jogos da API (a mesma API pode listar o mesmo confronto várias vezes)
+    const seen = new Set();
+    const uniqueApiGames = apiGames.filter((ag) => {
+      const key = `${ag.home?.name || '?'}|${ag.away?.name || '?'}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    for (const ag of uniqueApiGames) {
+      // Pula se esse confronto completo já existe na fase
+      if (ag.home && ag.away && existingPairs.has(`${ag.home.name}|${ag.away.name}`)) continue;
+
       let slot = null;
-      if (ag.home && ag.away) {
-        // Confronto completo: procura slot que tenha um dos times ou esteja vazio
-        slot = slots.find(
-          (s) =>
-            (s.home?.name === ag.home.name || s.away?.name === ag.away.name) ||
-            (!s.home && !s.away)
-        );
-      } else if (ag.home) {
+      if (ag.home && !ag.away) {
         // Só mandante definido: procura slot que já tenha esse mandante
         slot = slots.find((s) => s.home?.name === ag.home.name);
-      } else if (ag.away) {
+      } else if (!ag.home && ag.away) {
         slot = slots.find((s) => s.away?.name === ag.away.name);
+      } else if (ag.home && ag.away) {
+        // Confronto completo: procura slot que tenha um dos times
+        slot = slots.find((s) => s.home?.name === ag.home.name || s.away?.name === ag.away.name);
+        // Se não achou, usa o primeiro slot totalmente vazio
+        if (!slot) slot = slots.find((s) => !s.home && !s.away);
       }
       if (!slot) continue;
 
@@ -151,27 +168,11 @@ async function applyGames(games, source) {
       if (ag.date) patch.date = ag.date;
       if (Object.keys(patch).length) {
         await db.updateMatch(slot.id, patch);
-        // Remove o slot da lista para não reusar
+        if (ag.home && ag.away) existingPairs.add(`${ag.home.name}|${ag.away.name}`);
         const idx = slots.indexOf(slot);
         if (idx !== -1) slots.splice(idx, 1);
         updated += 1;
       }
-    }
-
-    // Segunda passada: confrontos completos da API que não casaram com nenhum slot existente
-    // vão para os primeiros slots totalmente vazios (ambos os times null)
-    const remainingFull = apiGames.filter(
-      (ag) => ag.home && ag.away && slots.some((s) => !s.home && !s.away)
-    );
-    for (const ag of remainingFull) {
-      const slot = slots.find((s) => !s.home && !s.away);
-      if (!slot) break;
-      const patch = { home: ag.home, away: ag.away };
-      if (ag.date) patch.date = ag.date;
-      await db.updateMatch(slot.id, patch);
-      const idx = slots.indexOf(slot);
-      if (idx !== -1) slots.splice(idx, 1);
-      updated += 1;
     }
   }
 
